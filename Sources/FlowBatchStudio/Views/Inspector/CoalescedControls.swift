@@ -44,24 +44,29 @@ struct CoalescedIntSlider: View {
 
     var body: some View {
         let current = store.document.nodes.first(where: { $0.id == nodeID })?.parameters[key]?.intValue ?? defaultValue
-        Slider(
-            value: Binding(
-                get: { Double(current) },
-                set: { next in
-                    store.beginContinuousEdit()
-                    store.setParameterTransient(nodeID: nodeID, key: key, value: .int(Int(next.rounded())))
-                }
-            ),
-            in: Double(range.lowerBound)...Double(range.upperBound),
-            step: 1,
-            onEditingChanged: { editing in
-                if editing {
-                    store.beginContinuousEdit()
-                } else {
-                    store.commitContinuousEdit(actionName: actionName)
-                }
+        let binding = Binding<Double>(
+            get: { Double(current) },
+            set: { next in
+                store.beginContinuousEdit()
+                store.setParameterTransient(nodeID: nodeID, key: key, value: .int(Int(next.rounded())))
             }
         )
-        .controlSize(.small)
+        let doubleRange = Double(range.lowerBound)...Double(range.upperBound)
+        let editingHandler: (Bool) -> Void = { editing in
+            if editing {
+                store.beginContinuousEdit()
+            } else {
+                store.commitContinuousEdit(actionName: actionName)
+            }
+        }
+        // Only render macOS discrete tick marks for small ranges (e.g. Speed 1–10);
+        // large ranges (e.g. Colors 2–256, Margin 0–400) stay smooth without dense tick bars.
+        if range.upperBound - range.lowerBound <= 15 {
+            Slider(value: binding, in: doubleRange, step: 1, onEditingChanged: editingHandler)
+                .controlSize(.small)
+        } else {
+            Slider(value: binding, in: doubleRange, onEditingChanged: editingHandler)
+                .controlSize(.small)
+        }
     }
 }

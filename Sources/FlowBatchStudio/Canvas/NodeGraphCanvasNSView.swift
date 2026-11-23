@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 final class NodeGraphCanvasNSView: NSView {
     let store: WorkflowStore
 
-    private let nodeSize = CGSize(width: 120, height: 90)
+    private let nodeSize = CGSize(width: 128, height: 90)
     private var hoveredNodeID: UUID?
     private var hoveredEdgeID: UUID?
     private var hoveredRemoveButtonNodeID: UUID?
@@ -48,6 +48,15 @@ final class NodeGraphCanvasNSView: NSView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        if let pop = inspectorPopover, pop.isShown,
+           let targetID = popoverAnchoredNodeID,
+           let node = store.document.nodes.first(where: { $0.id == targetID }) {
+            pop.positioningRect = viewRect(for: node)
+        }
     }
 
     override func updateTrackingAreas() {
@@ -153,10 +162,12 @@ final class NodeGraphCanvasNSView: NSView {
             maxX = max(maxX, node.position.x + Double(nodeSize.width))
             maxY = max(maxY, node.position.y + Double(nodeSize.height))
         }
+        let topInset = Double(safeAreaInsets.top)
+        let usableH = max(120, Double(bounds.height) - topInset)
         let contentW = max(120, maxX - minX + 120)
         let contentH = max(120, maxY - minY + 120)
         let zoomX = Double(bounds.width) / contentW
-        let zoomY = Double(bounds.height) / contentH
+        let zoomY = usableH / contentH
         let zoom = max(0.45, min(1.2, min(zoomX, zoomY)))
 
         store.document.viewportZoom = zoom
@@ -164,7 +175,7 @@ final class NodeGraphCanvasNSView: NSView {
         let centerGraphY = (minY + maxY) * 0.5
         store.document.viewportOffset = GraphPoint(
             x: Double(bounds.width) * 0.5 - centerGraphX * zoom,
-            y: Double(bounds.height) * 0.5 - centerGraphY * zoom
+            y: topInset + usableH * 0.5 - centerGraphY * zoom
         )
         needsDisplay = true
         syncInspectorPopover()

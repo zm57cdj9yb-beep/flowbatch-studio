@@ -70,7 +70,7 @@ struct MetalPreviewView: NSViewRepresentable {
             var composed = CIImage(color: bgColor).cropped(to: bounds)
 
             if let img = image, img.extent.width > 0, img.extent.height > 0, !img.extent.isInfinite {
-                let fitScale = min(drawableSize.width / img.extent.width, drawableSize.height / img.extent.height) * 0.95
+                let fitScale = min(drawableSize.width / img.extent.width, drawableSize.height / img.extent.height) * 0.98
                 let effectiveScale = max(0.05, fitScale * CGFloat(zoomScale))
 
                 // Checkerboard behind transparent regions

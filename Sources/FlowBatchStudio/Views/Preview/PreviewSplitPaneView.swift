@@ -15,11 +15,11 @@ struct PreviewSplitPaneView: View {
     @State private var previewContext: CIContext?
     @State private var previewError: String?
 
-    @State private var zoomPercent: Double = 116.0
+    @State private var zoomPercent: Double = 100.0
     @State private var darkBackground: Bool = false
     @State private var showOriginal: Bool = false
     @State private var showInfoPopover: Bool = false
-    @State private var splitRatio: CGFloat = 0.56
+    @State private var splitRatio: CGFloat = 0.40
 
     private let gridColumns = [
         GridItem(.adaptive(minimum: 62, maximum: 84), spacing: 6)

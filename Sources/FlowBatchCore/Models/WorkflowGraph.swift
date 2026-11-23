@@ -214,17 +214,17 @@ public struct WorkflowDocumentModel: Codable, Equatable, Sendable {
 
         let read1 = WorkflowNode(
             typeID: NodeTypeID.readFolder,
-            position: GraphPoint(x: 90, y: 90),
+            position: GraphPoint(x: 34, y: 66),
             parameters: ["folderPath": .string(aug9Path)]
         )
         let read2 = WorkflowNode(
             typeID: NodeTypeID.readFolder,
-            position: GraphPoint(x: 90, y: 270),
+            position: GraphPoint(x: 34, y: 234),
             parameters: ["folderPath": .string(aug11Path)]
         )
         let watermark = WorkflowNode(
             typeID: NodeTypeID.textWatermark,
-            position: GraphPoint(x: 280, y: 180),
+            position: GraphPoint(x: 196, y: 150),
             parameters: [
                 "text": .string("@ FlowBatch Sample"),
                 "fontSize": .double(28),
@@ -234,7 +234,7 @@ public struct WorkflowDocumentModel: Codable, Equatable, Sendable {
         )
         let scale = WorkflowNode(
             typeID: NodeTypeID.scale,
-            position: GraphPoint(x: 470, y: 90),
+            position: GraphPoint(x: 358, y: 66),
             parameters: [
                 "mode": .string("Fixed Width"),
                 "width": .int(800)
@@ -242,7 +242,7 @@ public struct WorkflowDocumentModel: Codable, Equatable, Sendable {
         )
         let write = WorkflowNode(
             typeID: NodeTypeID.writeImages,
-            position: GraphPoint(x: 655, y: 90),
+            position: GraphPoint(x: 516, y: 66),
             parameters: [
                 "folderPath": .string(defaultOutput),
                 "openFolderWhenFinished": .bool(true),

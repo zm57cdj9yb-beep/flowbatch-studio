@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 /// Main document window controller managing the 3-pane `NSSplitViewController`, unified toolbar,
 /// Play/Stop batch execution, file open/save, and `@MainActor UserPromptService` sheets.
 @MainActor
-final class MainWindowController: NSWindowController, NSToolbarDelegate, UserPromptService {
+final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolbarDelegate, UserPromptService {
     let store: WorkflowStore
     let runner: PipelineRunner
 
@@ -49,9 +49,11 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, UserPro
         window.title = store.document.documentTitle
         window.titleVisibility = .hidden
         window.toolbarStyle = .unified
+        window.collectionBehavior = [.fullScreenPrimary]
         window.center()
 
         super.init(window: window)
+        window.delegate = self
 
         setupSplitLayout()
         setupToolbar()
@@ -65,8 +67,33 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, UserPro
     override func showWindow(_ sender: Any?) {
         super.showWindow(sender)
         DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.applyBalancedSplitPositions()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                self?.canvasView.syncInspectorPopover()
+            }
+        }
+    }
+
+    func windowDidEnterFullScreen(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            self?.applyBalancedSplitPositions()
             self?.canvasView.syncInspectorPopover()
         }
+    }
+
+    func windowDidExitFullScreen(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            self?.applyBalancedSplitPositions()
+            self?.canvasView.syncInspectorPopover()
+        }
+    }
+
+    private func applyBalancedSplitPositions() {
+        let totalW = window?.contentLayoutRect.width ?? window?.frame.width ?? 1320
+        let previewW: CGFloat = min(440, max(340, totalW * 0.28))
+        splitVC.splitView.setPosition(208, ofDividerAt: 0)
+        splitVC.splitView.setPosition(totalW - previewW, ofDividerAt: 1)
     }
 
     // MARK: - Split Layout
@@ -82,6 +109,8 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, UserPro
         let rootView = NSView()
         canvasView = NodeGraphCanvasNSView(store: store)
         consoleHost = NSHostingView(rootView: WorkflowConsoleView(store: store))
+        consoleHost.sizingOptions = []
+        consoleHost.isHidden = true
 
         canvasView.translatesAutoresizingMaskIntoConstraints = false
         consoleHost.translatesAutoresizingMaskIntoConstraints = false
@@ -106,21 +135,19 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, UserPro
 
         let previewHost = NSHostingController(rootView: PreviewSplitPaneView(store: store, runner: runner))
         previewItem = NSSplitViewItem(viewController: previewHost)
-        previewItem.minimumThickness = 280
-        previewItem.maximumThickness = 600
+        previewItem.minimumThickness = 320
+        previewItem.maximumThickness = 560
         previewItem.canCollapse = true
 
         splitVC.addSplitViewItem(sidebarItem)
         splitVC.addSplitViewItem(centerItem)
         splitVC.addSplitViewItem(previewItem)
-        splitVC.preferredContentSize = NSSize(width: 1320, height: 800)
 
         window?.contentViewController = splitVC
         window?.setContentSize(NSSize(width: 1320, height: 800))
         window?.center()
         DispatchQueue.main.async { [weak self] in
-            self?.splitVC.splitView.setPosition(210, ofDividerAt: 0)
-            self?.splitVC.splitView.setPosition(930, ofDividerAt: 1)
+            self?.applyBalancedSplitPositions()
         }
     }
 
@@ -249,10 +276,18 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, UserPro
 
     @objc func toggleConsoleDrawer(_ sender: Any?) {
         isConsoleVisible.toggle()
-        NSAnimationContext.runAnimationGroup { ctx in
+        if isConsoleVisible {
+            consoleHost.isHidden = false
+        }
+        NSAnimationContext.runAnimationGroup({ ctx in
             ctx.duration = 0.2
             consoleHeightConstraint.animator().constant = isConsoleVisible ? 150 : 0
-        }
+        }, completionHandler: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, !self.isConsoleVisible else { return }
+                self.consoleHost.isHidden = true
+            }
+        })
     }
 
     @objc func toggleInspectorPopover(_ sender: Any?) {

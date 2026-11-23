@@ -85,7 +85,7 @@ struct NodeInspectorPopoverView: View {
                 }
             }
             .padding(14)
-            .frame(width: 344)
+            .frame(width: 368)
         }
     }
 }

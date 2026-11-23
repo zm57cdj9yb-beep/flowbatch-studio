@@ -92,6 +92,10 @@ final class FlowBatchAppDelegate: NSObject, NSApplicationDelegate {
         viewMenu.addItem(withTitle: "Toggle Preview Pane", action: #selector(MainWindowController.togglePreviewPane(_:)), keyEquivalent: "2")
         viewMenu.addItem(withTitle: "Toggle Console", action: #selector(MainWindowController.toggleConsoleDrawer(_:)), keyEquivalent: "3")
         viewMenu.addItem(withTitle: "Toggle Node Inspector", action: #selector(MainWindowController.toggleInspectorPopover(_:)), keyEquivalent: "i")
+        viewMenu.addItem(.separator())
+        let fsItem = NSMenuItem(title: "Enter Full Screen", action: #selector(NSWindow.toggleFullScreen(_:)), keyEquivalent: "f")
+        fsItem.keyEquivalentModifierMask = [.command, .control]
+        viewMenu.addItem(fsItem)
         viewMenuItem.submenu = viewMenu
         mainMenu.addItem(viewMenuItem)
 
