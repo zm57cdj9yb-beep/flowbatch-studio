@@ -1,0 +1,16 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "30 assets ready to read, 30 to write.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 assets ready to read, 30 to write."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
