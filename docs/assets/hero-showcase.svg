@@ -1,0 +1,203 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 680" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="sunsetSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="65%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#FEF3C7"/>
+    </linearGradient>
+    <linearGradient id="ocean" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#E2E8F0" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+
+  <!-- Outer presentation backdrop -->
+  <rect width="1120" height="680" rx="18" fill="url(#bg)"/>
+
+  <!-- macOS App Window -->
+  <rect x="34" y="30" width="1052" height="620" rx="14" fill="#FFFFFF" stroke="#334155" stroke-width="1.5"/>
+  <!-- Unified Toolbar -->
+  <path d="M 34 44 Q 34 30 48 30 L 1072 30 Q 1086 30 1086 44 L 1086 74 L 34 74 Z" fill="#F1F5F9"/>
+  <line x1="34" y1="74" x2="1086" y2="74" stroke="#CBD5E1" stroke-width="1"/>
+  <!-- Traffic lights -->
+  <circle cx="56" cy="52" r="6" fill="#FF5F56"/>
+  <circle cx="76" cy="52" r="6" fill="#FFBD2E"/>
+  <circle cx="96" cy="52" r="6" fill="#27C93F"/>
+  <text x="128" y="56" font-size="13" font-weight="600" fill="#1E293B">Watermark Images.flowbatch</text>
+  <!-- Play & Status Capsule -->
+  <polygon points="376,45 388,52 376,59" fill="#334155"/>
+  <rect x="400" y="39" width="290" height="26" rx="6" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="545" y="56" font-size="11.5" text-anchor="middle" fill="#475569">30 assets ready to read, 30 to write.</text>
+  <!-- Right toolbar pills -->
+  <rect x="960" y="42" width="24" height="20" rx="4" fill="#E2E8F0"/>
+  <rect x="990" y="42" width="24" height="20" rx="4" fill="#E2E8F0"/>
+  <rect x="1020" y="42" width="24" height="20" rx="4" fill="#DBEAFE"/>
+  <rect x="1050" y="42" width="24" height="20" rx="4" fill="#E2E8F0"/>
+
+  <!-- Left Sidebar -->
+  <rect x="34" y="74" width="174" height="576" fill="#F8FAFC"/>
+  <line x1="208" y1="74" x2="208" y2="650" stroke="#CBD5E1" stroke-width="1"/>
+  <rect x="46" y="86" width="150" height="24" rx="5" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="64" y="102" font-size="11" fill="#94A3B8">Search 67 nodes...</text>
+  <g font-size="11.5" fill="#334155" font-weight="500">
+    <text x="52" y="134">› Read Images</text>
+    <text x="52" y="158">› Write Images</text>
+    <text x="52" y="182">› Blur</text>
+    <text x="52" y="206">› Color Adjustment</text>
+    <text x="52" y="230">› Color Effect</text>
+    <text x="52" y="254">› Generator</text>
+    <text x="52" y="278">› Metadata</text>
+    <text x="52" y="302">› Misc</text>
+    <text x="52" y="326">› PDF</text>
+    <text x="52" y="350">› Photos Library</text>
+    <text x="52" y="374">› Script</text>
+    <text x="52" y="398">› Sharpen</text>
+    <text x="52" y="422">› Sort</text>
+    <text x="52" y="446">› Transform</text>
+    <text x="52" y="470">› Watermark</text>
+  </g>
+
+  <!-- Center Canvas -->
+  <rect x="208" y="74" width="546" height="576" fill="#FBFBFC"/>
+  <rect x="208" y="74" width="546" height="576" fill="url(#grid)"/>
+  <line x1="754" y1="74" x2="754" y2="650" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- Wires with directional chevrons -->
+  <g fill="none" stroke="#64748B" stroke-width="1.6">
+    <path d="M 334 166 C 370 166, 368 235, 398 235"/>
+    <path d="M 334 304 C 370 304, 368 235, 398 235"/>
+    <path d="M 504 235 C 534 235, 534 166, 560 166"/>
+    <path d="M 666 166 L 692 166"/>
+  </g>
+  <!-- Chevron glyphs -->
+  <g fill="#475569">
+    <polygon points="365,193 359,189 359,197"/>
+    <polygon points="365,274 359,270 359,278"/>
+    <polygon points="534,199 528,195 528,203"/>
+    <polygon points="682,166 676,162 676,170"/>
+  </g>
+
+  <!-- Node Cards -->
+  <g>
+    <!-- Read Folder 1 -->
+    <rect x="230" y="128" width="104" height="76" rx="11" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="282" y="150" font-size="11.5" font-weight="700" text-anchor="middle" fill="#0F172A">Read Folder</text>
+    <text x="282" y="167" font-size="9.5" text-anchor="middle" fill="#64748B">Aug 9 Shots</text>
+    <text x="282" y="182" font-size="9.5" text-anchor="middle" fill="#94A3B8">16 Files</text>
+
+    <!-- Read Folder 2 -->
+    <rect x="230" y="266" width="104" height="76" rx="11" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="282" y="288" font-size="11.5" font-weight="700" text-anchor="middle" fill="#0F172A">Read Folder</text>
+    <text x="282" y="305" font-size="9.5" text-anchor="middle" fill="#64748B">Aug 11 Shots</text>
+    <text x="282" y="320" font-size="9.5" text-anchor="middle" fill="#94A3B8">14 Files</text>
+
+    <!-- Text Watermark -->
+    <rect x="398" y="197" width="106" height="76" rx="11" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="451" y="219" font-size="11.5" font-weight="700" text-anchor="middle" fill="#0F172A">Text Watermark</text>
+    <text x="451" y="236" font-size="9.5" text-anchor="middle" fill="#64748B">@ FlowBatch</text>
+    <text x="451" y="251" font-size="9.5" text-anchor="middle" fill="#94A3B8">30 Files</text>
+
+    <!-- Scale -->
+    <rect x="560" y="128" width="106" height="76" rx="11" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="613" y="150" font-size="11.5" font-weight="700" text-anchor="middle" fill="#0F172A">Scale</text>
+    <text x="613" y="167" font-size="9.5" text-anchor="middle" fill="#64748B">Fixed 800 width</text>
+    <text x="613" y="182" font-size="9.5" text-anchor="middle" fill="#94A3B8">30 Files</text>
+
+    <!-- Write Images (Selected) -->
+    <rect x="692" y="128" width="52" height="76" rx="11" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+    <text x="718" y="154" font-size="10.5" font-weight="700" text-anchor="middle" fill="#0F172A">Write</text>
+    <text x="718" y="170" font-size="9" text-anchor="middle" fill="#64748B">PNG</text>
+    <text x="718" y="184" font-size="9" text-anchor="middle" fill="#94A3B8">30</text>
+  </g>
+
+  <!-- Anchored Write Images Popover Inspector -->
+  <rect x="462" y="220" width="276" height="394" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2"/>
+  <text x="600" y="244" font-size="12.5" font-weight="700" text-anchor="middle" fill="#0F172A">Write Images</text>
+  <circle cx="718" cy="240" r="8" fill="#2563EB"/>
+  <path d="M 714 240 L 717 243 L 722 237" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>
+
+  <g font-size="10.5" fill="#334155">
+    <text x="480" y="274" fill="#64748B">Folder:</text>
+    <rect x="542" y="261" width="174" height="19" rx="4" fill="#F1F5F9" stroke="#CBD5E1"/>
+    <text x="552" y="274" fill="#0F172A">Thumbnails</text>
+
+    <rect x="542" y="290" width="11" height="11" rx="2" fill="#2563EB"/>
+    <text x="559" y="299">Open folder when export finishes</text>
+    <rect x="542" y="308" width="11" height="11" rx="2" fill="#2563EB"/>
+    <text x="559" y="317">Overwrite existing images</text>
+
+    <text x="480" y="344" fill="#64748B">File name:</text>
+    <rect x="542" y="332" width="174" height="32" rx="4" fill="#F8FAFC" stroke="#CBD5E1"/>
+    <rect x="548" y="338" width="66" height="18" rx="4" fill="#BFDBFE"/>
+    <text x="555" y="350" font-size="10" font-weight="600" fill="#1E3A8A">File Name</text>
+
+    <text x="480" y="388" fill="#64748B">Convert to:</text>
+    <rect x="542" y="375" width="174" height="19" rx="4" fill="#2563EB"/>
+    <text x="552" y="388" fill="#FFFFFF" font-weight="600">PNG</text>
+
+    <rect x="542" y="405" width="11" height="11" rx="2" fill="#2563EB"/>
+    <text x="559" y="414">Remove alpha channel if opaque</text>
+    <rect x="542" y="423" width="11" height="11" rx="2" fill="#E2E8F0"/>
+    <text x="559" y="432" fill="#64748B">Crush (slow)</text>
+    <rect x="542" y="441" width="11" height="11" rx="2" fill="#E2E8F0"/>
+    <text x="559" y="450" fill="#64748B">Remove color profile</text>
+
+    <line x1="480" y1="464" x2="718" y2="464" stroke="#E2E8F0"/>
+    <rect x="542" y="476" width="11" height="11" rx="2" fill="#2563EB"/>
+    <text x="559" y="485" font-weight="600">Make indexed PNG</text>
+
+    <text x="480" y="510" fill="#64748B">Colors:</text>
+    <line x1="542" y1="506" x2="670" y2="506" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="668" cy="506" r="5" fill="#2563EB"/>
+    <text x="680" y="510">256</text>
+
+    <text x="480" y="534" fill="#64748B">Speed:</text>
+    <line x1="542" y1="530" x2="630" y2="530" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="546" cy="530" r="5" fill="#2563EB"/>
+    <text x="638" y="534" font-size="9.5" fill="#64748B">Best quality (1)</text>
+
+    <rect x="542" y="550" width="11" height="11" rx="2" fill="#E2E8F0"/>
+    <text x="559" y="559">Dither</text>
+  </g>
+
+  <!-- Right Pane: Metal Preview + Contact Sheet -->
+  <rect x="754" y="74" width="332" height="310" fill="#F1F5F9"/>
+  <rect x="772" y="88" width="296" height="282" rx="6" fill="url(#sunsetSky)"/>
+  <rect x="772" y="236" width="296" height="134" rx="0" fill="url(#ocean)"/>
+  <circle cx="932" cy="212" r="24" fill="#FEF9C3"/>
+  <text x="1056" y="356" font-size="10" text-anchor="end" fill="#FFFFFF" opacity="0.85">@ FlowBatch Sample</text>
+
+  <!-- Thumbnail Grid -->
+  <rect x="754" y="384" width="332" height="236" fill="#FFFFFF"/>
+  <line x1="754" y1="384" x2="1086" y2="384" stroke="#CBD5E1"/>
+  <g>
+    <!-- 4x3 grid of sample tiles -->
+    <rect x="770" y="398" width="68" height="48" rx="3" fill="#F59E0B" stroke="#2563EB" stroke-width="2.5"/>
+    <rect x="846" y="398" width="68" height="48" rx="3" fill="#0EA5E9"/>
+    <rect x="922" y="398" width="68" height="48" rx="3" fill="#3B82F6"/>
+    <rect x="998" y="398" width="68" height="48" rx="3" fill="#10B981"/>
+
+    <rect x="770" y="454" width="68" height="48" rx="3" fill="#8B5CF6"/>
+    <rect x="846" y="454" width="68" height="48" rx="3" fill="#EC4899"/>
+    <rect x="922" y="454" width="68" height="48" rx="3" fill="#F97316"/>
+    <rect x="998" y="454" width="68" height="48" rx="3" fill="#14B8A6"/>
+
+    <rect x="770" y="510" width="68" height="48" rx="3" fill="#1E3A8A"/>
+    <rect x="846" y="510" width="68" height="48" rx="3" fill="#6366F1"/>
+    <rect x="922" y="510" width="68" height="48" rx="3" fill="#EAB308"/>
+    <rect x="998" y="510" width="68" height="48" rx="3" fill="#0284C7"/>
+  </g>
+  <!-- Bottom Zoom Bar -->
+  <rect x="754" y="620" width="332" height="30" fill="#F8FAFC"/>
+  <line x1="754" y1="620" x2="1086" y2="620" stroke="#CBD5E1"/>
+  <text x="774" y="639" font-size="10.5" fill="#64748B">116%</text>
+  <line x1="815" y1="635" x2="940" y2="635" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="868" cy="635" r="5" fill="#2563EB"/>
+</svg>

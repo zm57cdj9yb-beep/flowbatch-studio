@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 320" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif">
+  <rect width="560" height="320" rx="14" fill="#0F172A"/>
+  <text x="28" y="38" font-size="15" font-weight="700" fill="#F8FAFC">AppKit NSView Canvas + SwiftUI Popovers</text>
+  <text x="28" y="58" font-size="11.5" fill="#94A3B8">Coalesced UndoManager • Keyboard/VoiceOver A11y • UTType Drag &amp; Drop</text>
+
+  <rect x="28" y="84" width="242" height="196" rx="10" fill="#1E293B" stroke="#38BDF8"/>
+  <text x="44" y="112" font-size="12" font-weight="700" fill="#38BDF8">AppKit Shell</text>
+  <text x="44" y="136" font-size="10.5" fill="#E2E8F0">• Unified NSWindow + NSToolbar</text>
+  <text x="44" y="156" font-size="10.5" fill="#E2E8F0">• NSSplitViewController (3-pane)</text>
+  <text x="44" y="176" font-size="10.5" fill="#E2E8F0">• Custom NodeGraphCanvasNSView</text>
+  <text x="44" y="196" font-size="10.5" fill="#E2E8F0">• Anchored NSPopover Inspectors</text>
+  <text x="44" y="216" font-size="10.5" fill="#E2E8F0">• NSAccessibilityElement Nodes</text>
+  <text x="44" y="236" font-size="10.5" fill="#E2E8F0">• Tab / Arrow / ⌘L Keyboard Nav</text>
+  <text x="44" y="256" font-size="10.5" fill="#94A3B8">• Single-step drag/slider Undo</text>
+
+  <rect x="290" y="84" width="242" height="196" rx="10" fill="#1E293B" stroke="#A78BFA"/>
+  <text x="306" y="112" font-size="12" font-weight="700" fill="#A78BFA">SwiftUI + MetalKit</text>
+  <text x="306" y="136" font-size="10.5" fill="#E2E8F0">• 15-Category Searchable Sidebar</text>
+  <text x="306" y="156" font-size="10.5" fill="#E2E8F0">• Specialized Write/Rules Inspectors</text>
+  <text x="306" y="176" font-size="10.5" fill="#E2E8F0">• MTKView Live Pipeline Preview</text>
+  <text x="306" y="196" font-size="10.5" fill="#E2E8F0">• 256px ImageIO Contact Sheet</text>
+  <text x="306" y="216" font-size="10.5" fill="#E2E8F0">• Light/Dark/Checkerboard Toggle</text>
+  <text x="306" y="236" font-size="10.5" fill="#E2E8F0">• (i) EXIF &amp; Vision ML HUD</text>
+  <text x="306" y="256" font-size="10.5" fill="#94A3B8">• Collapsible Execution Console</text>
+</svg>
