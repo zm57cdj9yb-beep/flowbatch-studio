@@ -1,0 +1,17 @@
+# Swift Package Manager & Xcode build artifacts
+.build/
+.swiftpm/
+build/
+*.xcodeproj
+xcuserdata/
+DerivedData/
+
+# Generated binaries (rebuilt cleanly by scripts/build_app.sh)
+Resources/AppIcon.icns
+Resources/DemoAssets/
+
+# macOS & Editor noise
+.DS_Store
+*.swp
+*.swo
+*~
