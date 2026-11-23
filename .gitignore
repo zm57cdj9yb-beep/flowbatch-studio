@@ -16,6 +16,12 @@ promo-video/out/
 promo-video/assets/demo.mp4
 promo-video/node_modules/
 
+# Windows Tauri 2 + Rust build artifacts
+windows/node_modules/
+windows/dist/
+windows/src-tauri/target/
+windows/src-tauri/gen/
+
 # macOS & Editor noise
 .DS_Store
 *.swp
