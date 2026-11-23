@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="45%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <linearGradient id="accentTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.92"/>
+      <stop offset="50%" stop-color="#EC4899" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.92"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#0F172A" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+  <!-- Outer macOS Squircle Base -->
+  <rect x="64" y="64" width="896" height="896" rx="200" ry="200" fill="#F8FAFC" filter="url(#cardShadow)"/>
+  <!-- Inner Gradient Canvas -->
+  <rect x="112" y="112" width="800" height="800" rx="160" ry="160" fill="url(#bgGrad)"/>
+  <!-- Warm Spectral Tile Ribbon -->
+  <rect x="112" y="112" width="800" height="270" rx="160" ry="160" fill="url(#accentTop)" opacity="0.55"/>
+  <!-- Subtle Blueprint Grid Lines -->
+  <g stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="3">
+    <line x1="312" y1="112" x2="312" y2="912"/>
+    <line x1="512" y1="112" x2="512" y2="912"/>
+    <line x1="712" y1="112" x2="712" y2="912"/>
+    <line x1="112" y1="312" x2="912" y2="312"/>
+    <line x1="112" y1="512" x2="912" y2="512"/>
+    <line x1="112" y1="712" x2="912" y2="712"/>
+  </g>
+  <!-- Flow Pipeline Splines -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" filter="url(#cardShadow)">
+    <path d="M 310 356 C 420 356, 410 512, 512 512"/>
+    <path d="M 310 668 C 420 668, 410 512, 512 512"/>
+    <path d="M 512 512 L 732 512"/>
+  </g>
+  <!-- Node Circles -->
+  <g filter="url(#cardShadow)">
+    <circle cx="310" cy="356" r="68" fill="#FFFFFF"/>
+    <circle cx="310" cy="356" r="30" fill="#2563EB"/>
+
+    <circle cx="310" cy="668" r="68" fill="#FFFFFF"/>
+    <circle cx="310" cy="668" r="30" fill="#0EA5E9"/>
+
+    <circle cx="512" cy="512" r="78" fill="#FFFFFF"/>
+    <circle cx="512" cy="512" r="34" fill="#EC4899"/>
+
+    <circle cx="732" cy="512" r="74" fill="#FFFFFF"/>
+    <polygon points="714,480 764,512 714,544" fill="#1E3A8A"/>
+  </g>
+</svg>

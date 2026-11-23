@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>FlowBatch Studio</string>
+    <key>CFBundleExecutable</key>
+    <string>FlowBatchStudio</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.local.flowbatch</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>FlowBatch Studio</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.photography</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>FlowBatch Studio reads images from your Photos Library when using the Read Photos Library workflow node.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>FlowBatch Studio saves processed batch images to your Photos Library when using the Import to Photos node.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>FlowBatch Studio executes user-authored AppleScript automation nodes in image processing workflows.</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>flowbatch</string>
+            </array>
+            <key>CFBundleTypeName</key>
+            <string>FlowBatch Workflow</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>com.local.flowbatch.workflow</string>
+            </array>
+        </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.json</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>FlowBatch Workflow Document</string>
+            <key>UTTypeIdentifier</key>
+            <string>com.local.flowbatch.workflow</string>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>flowbatch</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>FlowBatch Node Template Drag Payload</string>
+            <key>UTTypeIdentifier</key>
+            <string>com.local.flowbatch.node-template</string>
+        </dict>
+    </array>
+</dict>
+</plist>

@@ -1,0 +1,4 @@
+module CZlib {
+    header "czlib_shim.h"
+    export *
+}
