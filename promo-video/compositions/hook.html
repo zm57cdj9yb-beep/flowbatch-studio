@@ -1,0 +1,125 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Inter", sans-serif;
+    }
+    .hook-stage {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle 660px at 50% 42%, rgba(59, 130, 246, 0.18), transparent 72%),
+        linear-gradient(160deg, #0b1120 0%, #090d16 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 108px 192px;
+      gap: 28px;
+    }
+    .hook-eyebrow {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #93c5fd;
+      padding: 10px 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(147, 197, 253, 0.28);
+      background: rgba(30, 58, 138, 0.24);
+    }
+    .hook-title {
+      text-align: center;
+      font-size: 94px;
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      color: #f8fafc;
+      max-width: 1420px;
+    }
+    .hook-line {
+      display: block;
+    }
+    .hook-accent {
+      color: var(--accentColor, #3b82f6);
+    }
+    .hook-sub {
+      font-size: 32px;
+      font-weight: 400;
+      color: #cbd5e1;
+      letter-spacing: -0.01em;
+      text-align: center;
+    }
+  </style>
+
+  <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
+    <div id="hook-stage" class="hook-stage">
+      <div id="hook-eyebrow-clip" class="clip" data-start="0" data-duration="2.95" data-track-index="0">
+        <div id="hook-eyebrow" class="hook-eyebrow" data-var-text="eyebrow">
+          SWIFT 6 · METAL · 67 NODES
+        </div>
+      </div>
+
+      <div id="hook-title-clip" class="clip" data-start="0" data-duration="2.95" data-track-index="1">
+        <h1 class="hook-title">
+          <span id="hook-l1" class="hook-line" data-var-text="hookLine1">Batch image processing,</span>
+          <span id="hook-l2" class="hook-line">
+            <span data-var-text="hookLine2">built native for</span>
+            <span class="hook-accent" data-var-text="hookAccent">macOS.</span>
+          </span>
+        </h1>
+      </div>
+
+      <div id="hook-sub-clip" class="clip" data-start="0.35" data-duration="2.6" data-track-index="2">
+        <p id="hook-sub" class="hook-sub">
+          Visual DAGs, live Metal preview &amp; Indexed PNG.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // Frame 0 already holds a clean title frame (great thumbnail), with crisp sharpen settle
+    tl.fromTo(
+      "#hook-eyebrow",
+      { opacity: 0.9, y: 0 },
+      { opacity: 1, y: 0, duration: 0.2, ease: "power3.out" },
+      0
+    );
+
+    tl.fromTo(
+      "#hook-l1",
+      { opacity: 1, filter: "blur(0px)" },
+      { opacity: 1, filter: "blur(0px)", duration: 0.15, ease: "power4.out" },
+      0
+    );
+
+    tl.fromTo(
+      "#hook-l2",
+      { opacity: 0.92, filter: "blur(2px)" },
+      { opacity: 1, filter: "blur(0px)", duration: 0.22, ease: "power4.out" },
+      0.08
+    );
+
+    tl.fromTo(
+      "#hook-sub",
+      { opacity: 0, filter: "blur(6px)" },
+      { opacity: 1, filter: "blur(0px)", duration: 0.22, ease: "power3.out" },
+      0.38
+    );
+
+    // Smooth exit into workspace
+    tl.fromTo(
+      "#hook-stage",
+      { opacity: 1, scale: 1, filter: "blur(0px)" },
+      { opacity: 0, scale: 1.06, filter: "blur(10px)", duration: 0.26, ease: "power3.in" },
+      2.72
+    );
+
+    window.__timelines["hook"] = tl;
+  </script>
+</template>

@@ -1,0 +1,155 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Inter", sans-serif;
+    }
+    .ec-stage {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle 680px at 50% 45%, rgba(59, 130, 246, 0.2), transparent 72%),
+        linear-gradient(160deg, #0b1120 0%, #090d16 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 108px 192px;
+      gap: 30px;
+    }
+    .ec-lockup {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .ec-icon {
+      width: 120px;
+      height: 120px;
+      border-radius: 28px;
+      box-shadow: 0 20px 55px rgba(37, 99, 235, 0.35);
+      display: block;
+    }
+    .ec-brand {
+      font-size: 78px;
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      color: #f8fafc;
+      line-height: 1;
+    }
+    .ec-tagline {
+      font-size: 34px;
+      font-weight: 400;
+      color: #cbd5e1;
+      text-align: center;
+      letter-spacing: -0.01em;
+    }
+    .ec-pills {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+    .ec-pill {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 28px;
+      font-weight: 600;
+      color: #e2e8f0;
+      padding: 10px 24px;
+      border-radius: 999px;
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+    }
+    .ec-cta {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 38px;
+      border-radius: 16px;
+      background: var(--accentColor, #3b82f6);
+      color: #ffffff;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 28px;
+      font-weight: 700;
+      box-shadow: 0 18px 46px rgba(59, 130, 246, 0.38);
+    }
+    .ec-prompt {
+      opacity: 0.72;
+    }
+  </style>
+
+  <div id="root" data-composition-id="endcard" data-width="1920" data-height="1080">
+    <div class="ec-stage">
+      <div id="ec-lockup-clip" class="clip" data-start="0.05" data-duration="3.45" data-track-index="0">
+        <div class="ec-lockup">
+          <img id="ec-icon" class="ec-icon" src="assets/app-icon.svg" alt="FlowBatch Studio Icon" />
+          <div id="ec-brand" class="ec-brand" data-var-text="brandName">FlowBatch Studio</div>
+        </div>
+      </div>
+
+      <div id="ec-tag-clip" class="clip" data-start="0.32" data-duration="3.18" data-track-index="1">
+        <p id="ec-tagline" class="ec-tagline">
+          Native macOS batch image processor.
+        </p>
+      </div>
+
+      <div id="ec-pills-clip" class="clip" data-start="0.52" data-duration="2.98" data-track-index="2">
+        <div id="ec-pills" class="ec-pills">
+          <span class="ec-pill">Swift 6</span>
+          <span class="ec-pill">Metal GPU</span>
+          <span class="ec-pill">67 Nodes</span>
+        </div>
+      </div>
+
+      <div id="ec-cta-clip" class="clip" data-start="0.72" data-duration="2.78" data-track-index="3">
+        <div id="ec-cta" class="ec-cta">
+          <span class="ec-prompt">$</span>
+          <span data-var-text="ctaCommand">./scripts/build_app.sh release</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo(
+      "#ec-icon",
+      { opacity: 0, scale: 0.74 },
+      { opacity: 1, scale: 1.0, duration: 0.4, ease: "back.out(1.25)" },
+      0.08
+    );
+
+    tl.fromTo(
+      "#ec-brand",
+      { opacity: 0, filter: "blur(8px)", x: 18 },
+      { opacity: 1, filter: "blur(0px)", x: 0, duration: 0.3, ease: "power4.out" },
+      0.2
+    );
+
+    tl.fromTo(
+      "#ec-tagline",
+      { opacity: 0, filter: "blur(6px)" },
+      { opacity: 1, filter: "blur(0px)", duration: 0.24, ease: "power3.out" },
+      0.36
+    );
+
+    tl.fromTo(
+      "#ec-pills",
+      { opacity: 0, y: 12 },
+      { opacity: 1, y: 0, duration: 0.24, ease: "power3.out" },
+      0.56
+    );
+
+    tl.fromTo(
+      "#ec-cta",
+      { opacity: 0, scale: 0.94, y: 10 },
+      { opacity: 1, scale: 1.0, y: 0, duration: 0.28, ease: "expo.out" },
+      0.76
+    );
+
+    window.__timelines["endcard"] = tl;
+  </script>
+</template>

@@ -1,0 +1,181 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Inter", sans-serif;
+    }
+    .ws-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 75% 65% at 50% 45%, #16223a 0%, #090d16 74%);
+      z-index: 0;
+    }
+    .ws-cam {
+      position: absolute;
+      left: 192px;
+      top: 60px;
+      width: 1536px;
+      height: 960px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow:
+        0 38px 100px rgba(0, 0, 0, 0.68),
+        0 0 0 1px rgba(255, 255, 255, 0.14);
+      z-index: 1;
+      transform-origin: 50% 50%;
+    }
+    .ws-video {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1536px;
+      height: 960px;
+      object-fit: cover;
+      display: block;
+    }
+    .ws-hud-wrap {
+      position: absolute;
+      left: 192px;
+      bottom: 108px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .ws-card {
+      background: rgba(9, 13, 22, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.26);
+      border-radius: 18px;
+      padding: 22px 30px;
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5);
+      max-width: 640px;
+    }
+    .ws-kicker {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: #60a5fa;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .ws-heading {
+      font-size: 36px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      margin-bottom: 6px;
+    }
+    .ws-desc {
+      font-size: 28px;
+      font-weight: 400;
+      color: #cbd5e1;
+      line-height: 1.25;
+    }
+  </style>
+
+  <div id="root" data-composition-id="workspace" data-width="1920" data-height="1080">
+    <div class="ws-bg" data-layout-ignore></div>
+
+    <div id="ws-cam" class="ws-cam" data-layout-allow-overflow>
+      <video
+        id="ws-demo-video"
+        class="clip ws-video"
+        src="assets/demo.mp4"
+        data-start="0"
+        data-duration="8.5"
+        data-media-start="0"
+        data-track-index="0"
+        muted
+        playsinline
+      ></video>
+    </div>
+
+    <div id="ws-card1-clip" class="clip ws-hud-wrap" data-start="0.15" data-duration="2.2" data-track-index="1">
+      <div id="ws-card1" class="ws-card">
+        <div class="ws-kicker" data-layout-ignore>01 · WORKSPACE</div>
+        <div class="ws-heading">3-Pane Native macOS UI</div>
+        <div class="ws-desc">Live DAG pipeline across 30 assets.</div>
+      </div>
+    </div>
+
+    <div id="ws-card2-clip" class="clip ws-hud-wrap" data-start="2.75" data-duration="3.5" data-track-index="1">
+      <div id="ws-card2" class="ws-card">
+        <div class="ws-kicker" data-layout-ignore>02 · METAL PREVIEW</div>
+        <div class="ws-heading">Instant Contact-Sheet Scrubbing</div>
+        <div class="ws-desc">GPU-accelerated Core Image preview.</div>
+      </div>
+    </div>
+
+    <div id="ws-card3-clip" class="clip ws-hud-wrap" data-start="6.5" data-duration="1.9" data-track-index="1">
+      <div id="ws-card3" class="ws-card">
+        <div class="ws-kicker" data-layout-ignore>03 · PRECISION ZOOM</div>
+        <div class="ws-heading">Real-Time 300% Scaling</div>
+        <div class="ws-desc">Check watermark sharpness live.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // Single baseline fromTo, chained with .to() for zero GSAP baseline drift
+    tl.fromTo(
+      "#ws-cam",
+      { scale: 0.94, x: 0, y: 18, opacity: 0 },
+      { scale: 1.0, x: 0, y: 0, opacity: 1, duration: 0.45, ease: "expo.out" },
+      0
+    );
+
+    tl.fromTo(
+      "#ws-card1",
+      { opacity: 0, filter: "blur(6px)", y: 14 },
+      { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.24, ease: "power4.out" },
+      0.18
+    ).to(
+      "#ws-card1",
+      { opacity: 0, filter: "blur(6px)", duration: 0.16, ease: "power2.in" },
+      2.12
+    );
+
+    // Punch in onto right-hand Thumbnail Contact Sheet + Live Metal Preview (no black gap on right edge)
+    tl.to(
+      "#ws-cam",
+      { scale: 1.52, x: -275, y: -75, duration: 0.55, ease: "power2.inOut" },
+      2.35
+    );
+
+    tl.fromTo(
+      "#ws-card2",
+      { opacity: 0, filter: "blur(6px)", y: 14 },
+      { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.24, ease: "power4.out" },
+      2.8
+    ).to(
+      "#ws-card2",
+      { opacity: 0, filter: "blur(6px)", duration: 0.16, ease: "power2.in" },
+      6.02
+    );
+
+    // Slight vertical glide down toward Zoom slider at bottom-right
+    tl.to(
+      "#ws-cam",
+      { scale: 1.5, x: -265, y: -155, duration: 0.45, ease: "power2.inOut" },
+      6.28
+    );
+
+    tl.fromTo(
+      "#ws-card3",
+      { opacity: 0, filter: "blur(6px)", y: 14 },
+      { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.22, ease: "power4.out" },
+      6.55
+    ).to(
+      "#ws-card3",
+      { opacity: 0, filter: "blur(6px)", duration: 0.14, ease: "power2.in" },
+      8.22
+    );
+
+    window.__timelines["workspace"] = tl;
+  </script>
+</template>

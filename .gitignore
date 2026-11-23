@@ -10,6 +10,12 @@ DerivedData/
 Resources/AppIcon.icns
 Resources/DemoAssets/
 
+# HyperFrames rendered video & cache artifacts (source HTML/compositions remain tracked)
+promo-video/.hyperframes/
+promo-video/out/
+promo-video/assets/demo.mp4
+promo-video/node_modules/
+
 # macOS & Editor noise
 .DS_Store
 *.swp

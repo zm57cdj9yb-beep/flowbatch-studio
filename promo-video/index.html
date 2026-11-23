@@ -1,0 +1,140 @@
+<!doctype html>
+<html
+  lang="en"
+  data-composition-variables='[
+    {"id":"brandName","type":"string","label":"Brand Name","default":"FlowBatch Studio"},
+    {"id":"hookLine1","type":"string","label":"Hook Line 1","default":"Batch image processing,"},
+    {"id":"hookLine2","type":"string","label":"Hook Line 2","default":"built native for"},
+    {"id":"hookAccent","type":"string","label":"Hook Accent Word","default":"macOS."},
+    {"id":"eyebrow","type":"string","label":"Eyebrow","default":"SWIFT 6 · METAL · 67 NODES"},
+    {"id":"ctaCommand","type":"string","label":"CTA Command","default":"./scripts/build_app.sh release"},
+    {"id":"accentColor","type":"color","label":"Accent Color","default":"#3B82F6"}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>FlowBatch Studio — Launch Edit</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ground: #090d16;
+        --ink: #f8fafc;
+        --muted: #94a3b8;
+        --accentColor: #3b82f6;
+        --font-sans: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+        font-family: var(--font-sans);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .root-bg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 80% 70% at 50% 35%, #162036 0%, #090d16 70%);
+        z-index: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="26.5"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="root-bg" data-layout-ignore></div>
+
+      <div
+        id="hook"
+        data-composition-id="hook"
+        data-composition-src="compositions/hook.html"
+        data-start="0"
+        data-duration="3.0"
+        data-track-index="0"
+        data-track-kind="graphics"
+        data-width="1920"
+        data-height="1080"
+        style="z-index: 1"
+      ></div>
+
+      <div
+        id="workspace"
+        data-composition-id="workspace"
+        data-composition-src="compositions/workspace.html"
+        data-start="3.0"
+        data-duration="8.5"
+        data-track-index="0"
+        data-track-kind="graphics"
+        data-width="1920"
+        data-height="1080"
+        style="z-index: 2"
+      ></div>
+
+      <div
+        id="inspect"
+        data-composition-id="inspect"
+        data-composition-src="compositions/inspect.html"
+        data-start="11.5"
+        data-duration="6.0"
+        data-track-index="0"
+        data-track-kind="graphics"
+        data-width="1920"
+        data-height="1080"
+        style="z-index: 3"
+      ></div>
+
+      <div
+        id="nodes"
+        data-composition-id="nodes"
+        data-composition-src="compositions/nodes.html"
+        data-start="17.5"
+        data-duration="5.5"
+        data-track-index="0"
+        data-track-kind="graphics"
+        data-width="1920"
+        data-height="1080"
+        style="z-index: 4"
+      ></div>
+
+      <div
+        id="endcard"
+        data-composition-id="endcard"
+        data-composition-src="compositions/endcard.html"
+        data-start="23.0"
+        data-duration="3.5"
+        data-track-index="0"
+        data-track-kind="graphics"
+        data-width="1920"
+        data-height="1080"
+        style="z-index: 5"
+      ></div>
+    </div>
+
+    <script>
+      const mainTl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = mainTl;
+      mainTl.seek(0);
+    </script>
+  </body>
+</html>

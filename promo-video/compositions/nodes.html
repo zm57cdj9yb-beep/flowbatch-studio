@@ -1,0 +1,158 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Inter", sans-serif;
+    }
+    .nd-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 75% 65% at 50% 45%, #16223a 0%, #090d16 74%);
+      z-index: 0;
+    }
+    .nd-cam {
+      position: absolute;
+      left: 192px;
+      top: 60px;
+      width: 1536px;
+      height: 960px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow:
+        0 38px 100px rgba(0, 0, 0, 0.68),
+        0 0 0 1px rgba(255, 255, 255, 0.14);
+      z-index: 1;
+      transform-origin: 50% 50%;
+    }
+    .nd-video {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1536px;
+      height: 960px;
+      object-fit: cover;
+      display: block;
+    }
+    .nd-hud-wrap {
+      position: absolute;
+      right: 192px;
+      bottom: 108px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .nd-card {
+      background: rgba(9, 13, 22, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.26);
+      border-radius: 18px;
+      padding: 22px 30px;
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5);
+      max-width: 640px;
+    }
+    .nd-kicker {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: #60a5fa;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .nd-heading {
+      font-size: 36px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      margin-bottom: 6px;
+    }
+    .nd-desc {
+      font-size: 28px;
+      font-weight: 400;
+      color: #cbd5e1;
+      line-height: 1.25;
+    }
+  </style>
+
+  <div id="root" data-composition-id="nodes" data-width="1920" data-height="1080">
+    <div class="nd-bg" data-layout-ignore></div>
+
+    <div id="nd-cam" class="nd-cam" data-layout-allow-overflow>
+      <video
+        id="nd-demo-video"
+        class="clip nd-video"
+        src="assets/demo.mp4"
+        data-start="0"
+        data-duration="5.5"
+        data-media-start="19.5"
+        data-track-index="0"
+        muted
+        playsinline
+      ></video>
+    </div>
+
+    <div id="nd-card1-clip" class="clip nd-hud-wrap" data-start="0.25" data-duration="2.25" data-track-index="1">
+      <div id="nd-card1" class="nd-card">
+        <div class="nd-kicker" data-layout-ignore>06 · 67 NATIVE NODES</div>
+        <div class="nd-heading">Instant Library Search</div>
+        <div class="nd-desc">15 categories — double-click to add.</div>
+      </div>
+    </div>
+
+    <div id="nd-card2-clip" class="clip nd-hud-wrap" data-start="2.8" data-duration="2.5" data-track-index="1">
+      <div id="nd-card2" class="nd-card">
+        <div class="nd-kicker" data-layout-ignore>07 · POPOVER INSPECTORS</div>
+        <div class="nd-heading">Live Core Image Sliders</div>
+        <div class="nd-desc">Anchored controls with coalesced Undo.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // Single baseline fromTo + chained .to() moves (zero black gap on left edge)
+    tl.fromTo(
+      "#nd-cam",
+      { scale: 1.0, x: 0, y: 0, opacity: 1, filter: "blur(0px)" },
+      { scale: 1.48, x: 255, y: 140, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power2.inOut" },
+      0
+    )
+      .to(
+        "#nd-cam",
+        { scale: 1.38, x: 65, y: 105, duration: 0.5, ease: "power2.inOut" },
+        2.55
+      )
+      .to(
+        "#nd-cam",
+        { opacity: 0, scale: 1.24, filter: "blur(12px)", duration: 0.3, ease: "power3.in" },
+        5.18
+      );
+
+    tl.fromTo(
+      "#nd-card1",
+      { opacity: 0, filter: "blur(6px)", y: 14 },
+      { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.22, ease: "power4.out" },
+      0.3
+    ).to(
+      "#nd-card1",
+      { opacity: 0, filter: "blur(6px)", duration: 0.16, ease: "power2.in" },
+      2.3
+    );
+
+    tl.fromTo(
+      "#nd-card2",
+      { opacity: 0, filter: "blur(6px)", y: 14 },
+      { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.22, ease: "power4.out" },
+      2.85
+    ).to(
+      "#nd-card2",
+      { opacity: 0, filter: "blur(6px)", duration: 0.16, ease: "power2.in" },
+      5.08
+    );
+
+    window.__timelines["nodes"] = tl;
+  </script>
+</template>

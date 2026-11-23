@@ -32,9 +32,9 @@
 
 <br />
 
-<img src="docs/assets/hero-showcase.svg" width="940" alt="FlowBatch Studio 3-Pane Workspace Architecture" />
+<img src="docs/assets/hero-app.jpg" width="940" alt="FlowBatch Studio 3-Pane macOS Workspace" />
 
-<p><sub><em>Architecture preview of the 3-pane macOS workspace (Node Sidebar, AppKit Graph Canvas + Popover Inspector, and Metal Preview + Thumbnail Contact Sheet). Replace with a live macOS screenshot capture before public launch.</em></sub></p>
+<p><sub><em>Live macOS capture of FlowBatch Studio — 15-category Node Library, AppKit Graph Canvas with anchored Write Images Popover, and live Metal Preview + 30-asset Thumbnail Contact Sheet.</em></sub></p>
 
 <br />
 
