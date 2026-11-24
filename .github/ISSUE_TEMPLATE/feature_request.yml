@@ -1,0 +1,31 @@
+name: Feature or Node Request
+description: Propose a new processing node, export format, or platform parity improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - New processing node
+        - Windows parity improvement
+        - macOS improvement
+        - Export format / metadata
+        - CLI / automation
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Use Case
+      description: What batch workflow are you trying to run today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Behavior
+      description: Suggested node parameters, ports, or behavior.
+    validations:
+      required: true

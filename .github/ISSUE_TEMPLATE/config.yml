@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Workflow Recipes & Q&A (GitHub Discussions)
+    url: https://github.com/zm57cdj9yb-beep/flowbatch-studio/discussions
+    about: Ask questions, share `.flowbatch` workflows, or discuss ideas before opening an issue.

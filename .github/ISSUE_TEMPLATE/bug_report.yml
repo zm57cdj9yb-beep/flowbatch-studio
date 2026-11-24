@@ -1,0 +1,41 @@
+name: Bug Report
+description: Report a crash, incorrect image output, or `.flowbatch` compatibility bug
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows 11 (x64 — Tauri/Rust)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App Version or Commit SHA
+      placeholder: "e.g. v1.0.0 or main@d493315"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Include input image format/dimensions and node configuration (or paste a minimal `.flowbatch` JSON).
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Workflow Console / Terminal Output
+      render: shell
