@@ -446,7 +446,7 @@ final class NodeGraphCanvasNSView: NSView {
         titlePara.lineBreakMode = .byTruncatingTail
         let titleAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 12.5, weight: .semibold),
-            .foregroundColor: NSColor.labelColor,
+            .foregroundColor: NSColor(calibratedWhite: 0.11, alpha: 1.0),
             .paragraphStyle: titlePara
         ]
         let titleRect = CGRect(x: rect.minX + 8, y: rect.minY + 13, width: rect.width - 16, height: 18)
@@ -456,7 +456,7 @@ final class NodeGraphCanvasNSView: NSView {
         let subtitle = store.dryRun.nodeSubtitles[node.id] ?? ""
         let subAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 10, weight: .regular),
-            .foregroundColor: NSColor.secondaryLabelColor,
+            .foregroundColor: NSColor(calibratedWhite: 0.36, alpha: 1.0),
             .paragraphStyle: titlePara
         ]
         let subRect = CGRect(x: rect.minX + 8, y: rect.minY + 34, width: rect.width - 16, height: 15)
@@ -467,7 +467,7 @@ final class NodeGraphCanvasNSView: NSView {
         let countText = count == 1 ? "1 File" : "\(count) Files"
         let countAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 10, weight: .medium),
-            .foregroundColor: NSColor.tertiaryLabelColor,
+            .foregroundColor: NSColor(calibratedWhite: 0.48, alpha: 1.0),
             .paragraphStyle: titlePara
         ]
         let countRect = CGRect(x: rect.minX + 8, y: rect.minY + 50, width: rect.width - 16, height: 14)

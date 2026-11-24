@@ -21,6 +21,40 @@ pub struct IndexedPngOptions {
 struct ColorBox {
     start: usize,
     end: usize,
+    best_channel: usize,
+    best_range: u8,
+}
+
+impl ColorBox {
+    fn from_slice(samples: &[[u8; 4]], start: usize, end: usize) -> Self {
+        let mut mins = [255u8; 4];
+        let mut maxs = [0u8; 4];
+        for px in &samples[start..end] {
+            for c in 0..4 {
+                if px[c] < mins[c] {
+                    mins[c] = px[c];
+                }
+                if px[c] > maxs[c] {
+                    maxs[c] = px[c];
+                }
+            }
+        }
+        let mut best_channel = 0usize;
+        let mut best_range = 0u8;
+        for c in 0..4 {
+            let r = maxs[c].saturating_sub(mins[c]);
+            if r > best_range {
+                best_range = r;
+                best_channel = c;
+            }
+        }
+        Self {
+            start,
+            end,
+            best_channel,
+            best_range,
+        }
+    }
 }
 
 fn crc32(bytes: &[u8]) -> u32 {
@@ -66,40 +100,16 @@ fn median_cut_palette(rgba: &RgbaImage, max_colors: usize, speed: u8) -> Vec<[u8
         return vec![[0, 0, 0, 255], [255, 255, 255, 255]];
     }
 
-    let mut boxes = vec![ColorBox {
-        start: 0,
-        end: samples.len(),
-    }];
+    let mut boxes = vec![ColorBox::from_slice(&samples, 0, samples.len())];
 
     while boxes.len() < target {
         let mut best_idx = None;
         let mut best_range = 0u8;
-        let mut best_channel = 0usize;
 
         for (bi, b) in boxes.iter().enumerate() {
-            if b.end - b.start < 2 {
-                continue;
-            }
-            let slice = &samples[b.start..b.end];
-            let mut mins = [255u8; 4];
-            let mut maxs = [0u8; 4];
-            for px in slice {
-                for c in 0..4 {
-                    if px[c] < mins[c] {
-                        mins[c] = px[c];
-                    }
-                    if px[c] > maxs[c] {
-                        maxs[c] = px[c];
-                    }
-                }
-            }
-            for c in 0..4 {
-                let r = maxs[c] - mins[c];
-                if r > best_range {
-                    best_range = r;
-                    best_idx = Some(bi);
-                    best_channel = c;
-                }
+            if b.end - b.start >= 2 && b.best_range > best_range {
+                best_range = b.best_range;
+                best_idx = Some(bi);
             }
         }
 
@@ -108,17 +118,12 @@ fn median_cut_palette(rgba: &RgbaImage, max_colors: usize, speed: u8) -> Vec<[u8
             break;
         }
         let b = boxes.swap_remove(bi);
-        let ch = best_channel;
-        samples[b.start..b.end].sort_unstable_by_key(|p| p[ch]);
-        let mid = (b.start + b.end) / 2;
-        boxes.push(ColorBox {
-            start: b.start,
-            end: mid,
-        });
-        boxes.push(ColorBox {
-            start: mid,
-            end: b.end,
-        });
+        let ch = b.best_channel;
+        let mid_rel = (b.end - b.start) / 2;
+        samples[b.start..b.end].select_nth_unstable_by_key(mid_rel, |p| p[ch]);
+        let mid = b.start + mid_rel;
+        boxes.push(ColorBox::from_slice(&samples, b.start, mid));
+        boxes.push(ColorBox::from_slice(&samples, mid, b.end));
     }
 
     let mut palette: Vec<[u8; 4]> = boxes

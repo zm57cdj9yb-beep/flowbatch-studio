@@ -729,18 +729,199 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
     let order = doc.topological_order();
     let node_map: HashMap<&str, &WorkflowNode> = doc.nodes.iter().map(|n| (n.id.as_str(), n)).collect();
 
-    // Per-node, per-output-port asset buckets
-    let mut outputs: HashMap<(String, usize), Vec<PipelineAsset>> = HashMap::new();
-    let mut written_files: Vec<String> = Vec::new();
-    let mut node_errors: HashMap<String, String> = HashMap::new();
-    let mut logs: Vec<ExecutionLogEntry> = Vec::new();
+    // Check if the DAG can use bounded per-chunk streaming (no multi-asset collectors/sorters).
+    let has_barrier_node = order.iter().any(|nid| {
+        node_map.get(nid.as_str()).is_some_and(|n| {
+            n.is_enabled
+                && matches!(
+                    n.type_id.as_str(),
+                    node_type::PDF_MAKER
+                        | node_type::IMAGE_GRID
+                        | node_type::ANIMATED_IMAGE
+                        | node_type::SORT_ORDER
+                )
+        })
+    });
+
+    let folder_sources: Vec<&WorkflowNode> = order
+        .iter()
+        .filter_map(|nid| node_map.get(nid.as_str()).copied())
+        .filter(|n| {
+            n.is_enabled
+                && matches!(
+                    n.type_id.as_str(),
+                    node_type::READ_FOLDER | node_type::READ_PHOTOS_LIBRARY | node_type::READ_FILES
+                )
+        })
+        .collect();
+
+    let has_other_sources = order.iter().any(|nid| {
+        node_map.get(nid.as_str()).is_some_and(|n| {
+            n.is_enabled
+                && matches!(
+                    n.type_id.as_str(),
+                    node_type::BLANK_IMAGE
+                        | node_type::PROMPT_FOR_FILES
+                        | node_type::READ_CLIPBOARD
+                        | node_type::SCREENSHOT
+                )
+        })
+    });
+
+    if !has_barrier_node && !folder_sources.is_empty() && !has_other_sources {
+        return run_batch_streaming(doc, &order, &node_map, start);
+    }
+
+    let mut write_counters: HashMap<String, usize> = HashMap::new();
+    let mut written_files = Vec::new();
+    let mut node_errors = HashMap::new();
+    let mut logs = Vec::new();
     let mut processed_assets = 0usize;
     let mut halted = false;
 
+    run_dag_pass(
+        doc,
+        &order,
+        &node_map,
+        None,
+        &mut write_counters,
+        &mut written_files,
+        &mut node_errors,
+        &mut logs,
+        &mut processed_assets,
+        &mut halted,
+    );
+
+    BatchRunResult {
+        processed_assets,
+        written_files,
+        node_errors,
+        logs,
+        elapsed_ms: start.elapsed().as_millis(),
+    }
+}
+
+/// Bounded streaming execution: collects source paths up front and streams small chunks of
+/// 4 assets through the full DAG (Read -> Transform -> Write -> Drop) so peak RAM stays flat.
+fn run_batch_streaming(
+    doc: &WorkflowDocumentModel,
+    order: &[String],
+    node_map: &HashMap<&str, &WorkflowNode>,
+    start: Instant,
+) -> BatchRunResult {
+    const CHUNK_SIZE: usize = 4;
+    let mut queued: Vec<(String, PathBuf)> = Vec::new();
+    let mut logs = Vec::new();
     let now_str = || Local::now().format("%H:%M:%S").to_string();
 
-    for nid in &order {
+    for nid in order {
+        let Some(node) = node_map.get(nid.as_str()) else { continue };
+        if !node.is_enabled {
+            continue;
+        }
+        match node.type_id.as_str() {
+            node_type::READ_FOLDER => {
+                let folder = PathBuf::from(node.param_str("folderPath", ""));
+                let rec = node.param_bool("includeSubfolders", false);
+                let exts = node.param_str("filterExtensions", "");
+                let files = list_image_files(&folder, rec, &exts);
+                logs.push(ExecutionLogEntry {
+                    timestamp: now_str(),
+                    level: "info".into(),
+                    node_title: node.title.clone(),
+                    message: format!("Queued {} image(s) from {} (streaming)", files.len(), folder.display()),
+                });
+                for p in files {
+                    queued.push((nid.clone(), p));
+                }
+            }
+            node_type::READ_FILES => {
+                let raw = node.param_str("filePaths", "");
+                for s in raw.split(';').map(str::trim).filter(|s| !s.is_empty()) {
+                    queued.push((nid.clone(), PathBuf::from(s)));
+                }
+            }
+            node_type::READ_PHOTOS_LIBRARY => {
+                let base = dirs::picture_dir().unwrap_or_default();
+                let album = node.param_str("albumName", "");
+                let folder = if album.trim().is_empty() {
+                    base
+                } else {
+                    base.join(album.trim())
+                };
+                let limit = node.param_i64("limit", 50).max(1) as usize;
+                for p in list_image_files(&folder, false, "").into_iter().take(limit) {
+                    queued.push((nid.clone(), p));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let mut write_counters: HashMap<String, usize> = HashMap::new();
+    let mut written_files = Vec::new();
+    let mut node_errors = HashMap::new();
+    let mut processed_assets = 0usize;
+    let mut halted = false;
+
+    for chunk in queued.chunks(CHUNK_SIZE) {
         if halted {
+            break;
+        }
+        let mut preloaded: HashMap<String, Vec<PathBuf>> = HashMap::new();
+        for (src_id, path) in chunk {
+            preloaded.entry(src_id.clone()).or_default().push(path.clone());
+        }
+        run_dag_pass(
+            doc,
+            order,
+            node_map,
+            Some(&preloaded),
+            &mut write_counters,
+            &mut written_files,
+            &mut node_errors,
+            &mut logs,
+            &mut processed_assets,
+            &mut halted,
+        );
+    }
+
+    BatchRunResult {
+        processed_assets,
+        written_files,
+        node_errors,
+        logs,
+        elapsed_ms: start.elapsed().as_millis(),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_dag_pass(
+    doc: &WorkflowDocumentModel,
+    order: &[String],
+    node_map: &HashMap<&str, &WorkflowNode>,
+    streaming_paths: Option<&HashMap<String, Vec<PathBuf>>>,
+    write_counters: &mut HashMap<String, usize>,
+    written_files: &mut Vec<String>,
+    node_errors: &mut HashMap<String, String>,
+    logs: &mut Vec<ExecutionLogEntry>,
+    processed_assets: &mut usize,
+    halted: &mut bool,
+) {
+    // Reference-count outgoing consumers so each bucket is moved (not cloned) on its final consumer
+    // and terminal sinks drop decoded bitmaps immediately.
+    let mut remaining_consumers: HashMap<(String, usize), usize> = HashMap::new();
+    for e in &doc.edges {
+        *remaining_consumers
+            .entry((e.source_node_id.clone(), e.source_port_index))
+            .or_insert(0) += 1;
+    }
+
+    let mut outputs: HashMap<(String, usize), Vec<PipelineAsset>> = HashMap::new();
+    let now_str = || Local::now().format("%H:%M:%S").to_string();
+
+    for nid in order {
+        if *halted {
             break;
         }
         let Some(node) = node_map.get(nid.as_str()) else { continue };
@@ -748,28 +929,54 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
         let mut incoming: Vec<PipelineAsset> = Vec::new();
         for e in &doc.edges {
             if e.target_node_id == *nid {
-                if let Some(bucket) = outputs.get(&(e.source_node_id.clone(), e.source_port_index)) {
-                    incoming.extend(bucket.iter().cloned());
+                let key = (e.source_node_id.clone(), e.source_port_index);
+                let rem = remaining_consumers.entry(key.clone()).or_insert(0);
+                if *rem <= 1 {
+                    *rem = 0;
+                    if let Some(mut bucket) = outputs.remove(&key) {
+                        incoming.append(&mut bucket);
+                    }
+                } else {
+                    *rem -= 1;
+                    if let Some(bucket) = outputs.get(&key) {
+                        incoming.extend(bucket.iter().cloned());
+                    }
                 }
             }
         }
 
+        let store_output = |outputs: &mut HashMap<(String, usize), Vec<PipelineAsset>>,
+                            port: usize,
+                            items: Vec<PipelineAsset>| {
+            if remaining_consumers.get(&(nid.clone(), port)).copied().unwrap_or(0) > 0 {
+                outputs.insert((nid.clone(), port), items);
+            }
+        };
+
         if !node.is_enabled {
-            outputs.insert((nid.clone(), 0), incoming);
+            store_output(&mut outputs, 0, incoming);
             continue;
         }
 
         match node.type_id.as_str() {
             node_type::READ_FOLDER => {
-                let folder = PathBuf::from(node.param_str("folderPath", ""));
-                let rec = node.param_bool("includeSubfolders", false);
-                let exts = node.param_str("filterExtensions", "");
-                let files = list_image_files(&folder, rec, &exts);
+                let files: Vec<PathBuf> = if let Some(map) = streaming_paths {
+                    map.get(nid).cloned().unwrap_or_default()
+                } else {
+                    let folder = PathBuf::from(node.param_str("folderPath", ""));
+                    let rec = node.param_bool("includeSubfolders", false);
+                    let exts = node.param_str("filterExtensions", "");
+                    list_image_files(&folder, rec, &exts)
+                };
+                if files.is_empty() {
+                    store_output(&mut outputs, 0, Vec::new());
+                    continue;
+                }
                 let loaded: Vec<Result<PipelineAsset, String>> = files
                     .par_iter()
                     .map(|p| PipelineAsset::from_file(p))
                     .collect();
-                let mut ok_assets = Vec::new();
+                let mut ok_assets = Vec::with_capacity(loaded.len());
                 for res in loaded {
                     match res {
                         Ok(a) => ok_assets.push(a),
@@ -782,26 +989,38 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                             });
                             if node.error_policy == NodeErrorPolicy::HaltWorkflow {
                                 node_errors.insert(nid.clone(), e);
-                                halted = true;
+                                *halted = true;
                                 break;
                             }
                         }
                     }
                 }
-                processed_assets += ok_assets.len();
-                logs.push(ExecutionLogEntry {
-                    timestamp: now_str(),
-                    level: "info".into(),
-                    node_title: node.title.clone(),
-                    message: format!("Read {} image(s) from {}", ok_assets.len(), folder.display()),
-                });
-                outputs.insert((nid.clone(), 0), ok_assets);
+                *processed_assets += ok_assets.len();
+                if streaming_paths.is_none() {
+                    let folder = PathBuf::from(node.param_str("folderPath", ""));
+                    logs.push(ExecutionLogEntry {
+                        timestamp: now_str(),
+                        level: "info".into(),
+                        node_title: node.title.clone(),
+                        message: format!("Read {} image(s) from {}", ok_assets.len(), folder.display()),
+                    });
+                }
+                store_output(&mut outputs, 0, ok_assets);
             }
             node_type::READ_FILES => {
-                let raw = node.param_str("filePaths", "");
+                let files: Vec<PathBuf> = if let Some(map) = streaming_paths {
+                    map.get(nid).cloned().unwrap_or_default()
+                } else {
+                    node.param_str("filePaths", "")
+                        .split(';')
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .map(PathBuf::from)
+                        .collect()
+                };
                 let mut ok_assets = Vec::new();
-                for s in raw.split(';').map(str::trim).filter(|s| !s.is_empty()) {
-                    match PipelineAsset::from_file(Path::new(s)) {
+                for p in &files {
+                    match PipelineAsset::from_file(p) {
                         Ok(a) => ok_assets.push(a),
                         Err(e) => {
                             node_errors.insert(nid.clone(), e.clone());
@@ -814,33 +1033,37 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                         }
                     }
                 }
-                processed_assets += ok_assets.len();
-                outputs.insert((nid.clone(), 0), ok_assets);
+                *processed_assets += ok_assets.len();
+                store_output(&mut outputs, 0, ok_assets);
             }
             node_type::READ_PHOTOS_LIBRARY => {
-                let base = dirs::picture_dir().unwrap_or_default();
-                let album = node.param_str("albumName", "");
-                let folder = if album.trim().is_empty() {
-                    base
+                let files: Vec<PathBuf> = if let Some(map) = streaming_paths {
+                    map.get(nid).cloned().unwrap_or_default()
                 } else {
-                    base.join(album.trim())
+                    let base = dirs::picture_dir().unwrap_or_default();
+                    let album = node.param_str("albumName", "");
+                    let folder = if album.trim().is_empty() {
+                        base
+                    } else {
+                        base.join(album.trim())
+                    };
+                    let limit = node.param_i64("limit", 50).max(1) as usize;
+                    list_image_files(&folder, false, "").into_iter().take(limit).collect()
                 };
-                let limit = node.param_i64("limit", 50).max(1) as usize;
-                let files: Vec<PathBuf> = list_image_files(&folder, false, "").into_iter().take(limit).collect();
                 let ok_assets: Vec<PipelineAsset> = files
                     .par_iter()
                     .filter_map(|p| PipelineAsset::from_file(p).ok())
                     .collect();
-                processed_assets += ok_assets.len();
-                outputs.insert((nid.clone(), 0), ok_assets);
+                *processed_assets += ok_assets.len();
+                store_output(&mut outputs, 0, ok_assets);
             }
             node_type::BLANK_IMAGE => {
                 let w = node.param_i64("width", 1200).clamp(16, 4096) as u32;
                 let h = node.param_i64("height", 800).clamp(16, 4096) as u32;
                 let c = node.param_color("color", CodableColor::WHITE).to_rgba8();
                 let img = DynamicImage::ImageRgba8(RgbaImage::from_pixel(w, h, Rgba(c)));
-                processed_assets += 1;
-                outputs.insert((nid.clone(), 0), vec![PipelineAsset::synthetic("Blank", img)]);
+                *processed_assets += 1;
+                store_output(&mut outputs, 0, vec![PipelineAsset::synthetic("Blank", img)]);
             }
             node_type::PROMPT_FOR_FILES | node_type::READ_CLIPBOARD | node_type::SCREENSHOT => {
                 logs.push(ExecutionLogEntry {
@@ -849,7 +1072,7 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                     node_title: node.title.clone(),
                     message: "Interactive/OS source node skipped in headless batch mode (0 assets).".into(),
                 });
-                outputs.insert((nid.clone(), 0), incoming);
+                store_output(&mut outputs, 0, incoming);
             }
             node_type::RULES => {
                 let match_all = node.param_bool("matchAll", true);
@@ -867,14 +1090,16 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                         unmatched.push(a);
                     }
                 }
-                logs.push(ExecutionLogEntry {
-                    timestamp: now_str(),
-                    level: "info".into(),
-                    node_title: node.title.clone(),
-                    message: format!("Routed {} matched, {} unmatched", matched.len(), unmatched.len()),
-                });
-                outputs.insert((nid.clone(), 0), matched);
-                outputs.insert((nid.clone(), 1), unmatched);
+                if streaming_paths.is_none() {
+                    logs.push(ExecutionLogEntry {
+                        timestamp: now_str(),
+                        level: "info".into(),
+                        node_title: node.title.clone(),
+                        message: format!("Routed {} matched, {} unmatched", matched.len(), unmatched.len()),
+                    });
+                }
+                store_output(&mut outputs, 0, matched);
+                store_output(&mut outputs, 1, unmatched);
             }
             node_type::SORT_ORDER => {
                 let by = node.param_str("sortBy", "File Name");
@@ -888,7 +1113,7 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                     };
                     if asc { ord } else { ord.reverse() }
                 });
-                outputs.insert((nid.clone(), 0), incoming);
+                store_output(&mut outputs, 0, incoming);
             }
             node_type::PDF_MAKER => {
                 if !incoming.is_empty() {
@@ -897,7 +1122,7 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                     let imgs: Vec<DynamicImage> = incoming.iter().map(|a| a.image.clone()).collect();
                     match build_multipage_pdf(&imgs, margin) {
                         Ok(pdf_bytes) => {
-                            let mut out_asset = incoming[0].clone();
+                            let mut out_asset = incoming.into_iter().next().unwrap();
                             out_asset.base_name = Path::new(&fname)
                                 .file_stem()
                                 .and_then(|s| s.to_str())
@@ -911,7 +1136,7 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                                 node_title: node.title.clone(),
                                 message: format!("Built {}-page PDF ({})", imgs.len(), fname),
                             });
-                            outputs.insert((nid.clone(), 0), vec![out_asset]);
+                            store_output(&mut outputs, 0, vec![out_asset]);
                         }
                         Err(e) => {
                             node_errors.insert(nid.clone(), e.clone());
@@ -924,7 +1149,7 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                         }
                     }
                 } else {
-                    outputs.insert((nid.clone(), 0), vec![]);
+                    store_output(&mut outputs, 0, vec![]);
                 }
             }
             node_type::IMAGE_GRID => {
@@ -945,12 +1170,13 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                         let oy = gap + r * (tile + gap);
                         image::imageops::overlay(&mut canvas, &thumb, ox as i64, oy as i64);
                     }
-                    outputs.insert(
-                        (nid.clone(), 0),
+                    store_output(
+                        &mut outputs,
+                        0,
                         vec![PipelineAsset::synthetic("ImageGrid", DynamicImage::ImageRgba8(canvas))],
                     );
                 } else {
-                    outputs.insert((nid.clone(), 0), vec![]);
+                    store_output(&mut outputs, 0, vec![]);
                 }
             }
             node_type::ANIMATED_IMAGE => {
@@ -973,7 +1199,7 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                             let _ = enc.encode_frame(frame);
                         }
                     }
-                    let mut out_asset = incoming[0].clone();
+                    let mut out_asset = incoming.into_iter().next().unwrap();
                     out_asset.base_name = Path::new(&fname)
                         .file_stem()
                         .and_then(|s| s.to_str())
@@ -981,16 +1207,24 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                         .to_string();
                     out_asset.extension = "gif".into();
                     out_asset.gif_bytes = Some(gif_buf);
-                    outputs.insert((nid.clone(), 0), vec![out_asset]);
+                    store_output(&mut outputs, 0, vec![out_asset]);
                 } else {
-                    outputs.insert((nid.clone(), 0), vec![]);
+                    store_output(&mut outputs, 0, vec![]);
                 }
             }
             node_type::WRITE_IMAGES => {
+                if incoming.is_empty() {
+                    store_output(&mut outputs, 0, Vec::new());
+                    continue;
+                }
+                let counter_entry = write_counters.entry(nid.clone()).or_insert(0);
+                let base_counter = *counter_entry;
+                *counter_entry += incoming.len();
+
                 let write_results: Vec<Result<String, String>> = incoming
                     .par_iter()
                     .enumerate()
-                    .map(|(idx, asset)| write_asset_to_disk(node, asset, idx + 1))
+                    .map(|(idx, asset)| write_asset_to_disk(node, asset, base_counter + idx + 1))
                     .collect();
                 let mut ok_count = 0usize;
                 for res in write_results {
@@ -1008,21 +1242,27 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                                 message: e,
                             });
                             if node.error_policy == NodeErrorPolicy::HaltWorkflow {
-                                halted = true;
+                                *halted = true;
                                 break;
                             }
                         }
                     }
                 }
-                logs.push(ExecutionLogEntry {
-                    timestamp: now_str(),
-                    level: "info".into(),
-                    node_title: node.title.clone(),
-                    message: format!("Exported {ok_count} image(s) successfully."),
-                });
-                outputs.insert((nid.clone(), 0), incoming);
+                if streaming_paths.is_none() {
+                    logs.push(ExecutionLogEntry {
+                        timestamp: now_str(),
+                        level: "info".into(),
+                        node_title: node.title.clone(),
+                        message: format!("Exported {ok_count} image(s) successfully."),
+                    });
+                }
+                store_output(&mut outputs, 0, incoming);
             }
             node_type::IMPORT_TO_PHOTOS => {
+                if incoming.is_empty() {
+                    store_output(&mut outputs, 0, Vec::new());
+                    continue;
+                }
                 let album = sanitize_filename(&node.param_str("albumName", "FlowBatch Exports"));
                 let dest = dirs::picture_dir()
                     .unwrap_or_else(std::env::temp_dir)
@@ -1037,28 +1277,37 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                 synth_write
                     .parameters
                     .insert("overwriteExisting".into(), NodeParamValue::Bool(true));
+                let counter_entry = write_counters.entry(nid.clone()).or_insert(0);
+                let base_counter = *counter_entry;
+                *counter_entry += incoming.len();
                 for (idx, a) in incoming.iter().enumerate() {
-                    if let Ok(p) = write_asset_to_disk(&synth_write, a, idx + 1) {
+                    if let Ok(p) = write_asset_to_disk(&synth_write, a, base_counter + idx + 1) {
                         written_files.push(p);
                     }
                 }
-                outputs.insert((nid.clone(), 0), incoming);
+                store_output(&mut outputs, 0, incoming);
             }
             node_type::WRITE_CLIPBOARD | node_type::OPEN_IN_APP => {
-                logs.push(ExecutionLogEntry {
-                    timestamp: now_str(),
-                    level: "info".into(),
-                    node_title: node.title.clone(),
-                    message: format!("Completed sink step for {} asset(s).", incoming.len()),
-                });
-                outputs.insert((nid.clone(), 0), incoming);
+                if streaming_paths.is_none() {
+                    logs.push(ExecutionLogEntry {
+                        timestamp: now_str(),
+                        level: "info".into(),
+                        node_title: node.title.clone(),
+                        message: format!("Completed sink step for {} asset(s).", incoming.len()),
+                    });
+                }
+                store_output(&mut outputs, 0, incoming);
             }
             _ => {
-                // Parallel per-asset execution across all CPU cores with Rayon!
-                let results: Vec<(PipelineAsset, Result<Vec<PipelineAsset>, String>)> = incoming
+                if incoming.is_empty() {
+                    store_output(&mut outputs, 0, Vec::new());
+                    continue;
+                }
+                let need_backup = node.error_policy == NodeErrorPolicy::PassThroughOnFailure;
+                let results: Vec<(Option<PipelineAsset>, Result<Vec<PipelineAsset>, String>)> = incoming
                     .into_par_iter()
                     .map(|asset| {
-                        let backup = asset.clone();
+                        let backup = if need_backup { Some(asset.clone()) } else { None };
                         let res = execute_single_asset_node(node, asset, false);
                         (backup, res)
                     })
@@ -1078,26 +1327,22 @@ pub fn run_batch(doc: &WorkflowDocumentModel) -> BatchRunResult {
                             });
                             match node.error_policy {
                                 NodeErrorPolicy::SkipAsset => {}
-                                NodeErrorPolicy::PassThroughOnFailure => next_bucket.push(backup),
+                                NodeErrorPolicy::PassThroughOnFailure => {
+                                    if let Some(b) = backup {
+                                        next_bucket.push(b);
+                                    }
+                                }
                                 NodeErrorPolicy::HaltWorkflow => {
-                                    halted = true;
+                                    *halted = true;
                                     break;
                                 }
                             }
                         }
                     }
                 }
-                outputs.insert((nid.clone(), 0), next_bucket);
+                store_output(&mut outputs, 0, next_bucket);
             }
         }
-    }
-
-    BatchRunResult {
-        processed_assets,
-        written_files,
-        node_errors,
-        logs,
-        elapsed_ms: start.elapsed().as_millis(),
     }
 }
 
