@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "documentTitle": "05-portfolio-pdf-and-contact-sheet.flowbatch",
+  "viewportOffset": { "x": 32, "y": 40 },
+  "viewportZoom": 1.0,
+  "nodes": [
+    {
+      "id": "50000001-0000-4000-8000-000000000001",
+      "typeID": "read.folder",
+      "title": "Read Folder",
+      "position": { "x": 40, "y": 150 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "folderPath": { "string": { "_0": "" } },
+        "includeSubfolders": { "bool": { "_0": false } }
+      }
+    },
+    {
+      "id": "50000001-0000-4000-8000-000000000002",
+      "typeID": "sort.order",
+      "title": "Sort Order",
+      "position": { "x": 230, "y": 150 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "sortBy": { "string": { "_0": "File Name" } },
+        "ascending": { "bool": { "_0": true } }
+      }
+    },
+    {
+      "id": "50000001-0000-4000-8000-000000000003",
+      "typeID": "generator.imageGrid",
+      "title": "Image Grid",
+      "position": { "x": 440, "y": 70 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "columns": { "int": { "_0": 4 } },
+        "tileSize": { "int": { "_0": 256 } },
+        "spacing": { "int": { "_0": 12 } }
+      }
+    },
+    {
+      "id": "50000001-0000-4000-8000-000000000004",
+      "typeID": "pdf.maker",
+      "title": "PDF Maker",
+      "position": { "x": 440, "y": 230 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "fileName": { "string": { "_0": "Portfolio" } },
+        "margin": { "int": { "_0": 18 } }
+      }
+    },
+    {
+      "id": "50000001-0000-4000-8000-000000000005",
+      "typeID": "write.images",
+      "title": "Write Contact Sheet",
+      "position": { "x": 640, "y": 70 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "folderPath": { "string": { "_0": "" } },
+        "askForOutputFolder": { "bool": { "_0": true } },
+        "fileNamePattern": { "string": { "_0": "contact-sheet" } },
+        "format": { "string": { "_0": "PNG" } }
+      }
+    },
+    {
+      "id": "50000001-0000-4000-8000-000000000006",
+      "typeID": "write.images",
+      "title": "Write PDF",
+      "position": { "x": 640, "y": 230 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "folderPath": { "string": { "_0": "" } },
+        "askForOutputFolder": { "bool": { "_0": true } },
+        "fileNamePattern": { "string": { "_0": "[File Name]" } },
+        "format": { "string": { "_0": "PDF" } }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "50000001-0000-4000-9000-000000000001",
+      "sourceNodeID": "50000001-0000-4000-8000-000000000001",
+      "sourcePortIndex": 0,
+      "targetNodeID": "50000001-0000-4000-8000-000000000002",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "50000001-0000-4000-9000-000000000002",
+      "sourceNodeID": "50000001-0000-4000-8000-000000000002",
+      "sourcePortIndex": 0,
+      "targetNodeID": "50000001-0000-4000-8000-000000000003",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "50000001-0000-4000-9000-000000000003",
+      "sourceNodeID": "50000001-0000-4000-8000-000000000002",
+      "sourcePortIndex": 0,
+      "targetNodeID": "50000001-0000-4000-8000-000000000004",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "50000001-0000-4000-9000-000000000004",
+      "sourceNodeID": "50000001-0000-4000-8000-000000000003",
+      "sourcePortIndex": 0,
+      "targetNodeID": "50000001-0000-4000-8000-000000000005",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "50000001-0000-4000-9000-000000000005",
+      "sourceNodeID": "50000001-0000-4000-8000-000000000004",
+      "sourcePortIndex": 0,
+      "targetNodeID": "50000001-0000-4000-8000-000000000006",
+      "targetPortIndex": 0
+    }
+  ]
+}

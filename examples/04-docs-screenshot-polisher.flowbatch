@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "documentTitle": "04-docs-screenshot-polisher.flowbatch",
+  "viewportOffset": { "x": 32, "y": 40 },
+  "viewportZoom": 1.0,
+  "nodes": [
+    {
+      "id": "40000001-0000-4000-8000-000000000001",
+      "typeID": "read.folder",
+      "title": "Read Folder",
+      "position": { "x": 40, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "folderPath": { "string": { "_0": "" } },
+        "filterExtensions": { "string": { "_0": "png" } }
+      }
+    },
+    {
+      "id": "40000001-0000-4000-8000-000000000002",
+      "typeID": "transform.trim",
+      "title": "Trim to Edges",
+      "position": { "x": 220, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "alphaThreshold": { "double": { "_0": 0.02 } }
+      }
+    },
+    {
+      "id": "40000001-0000-4000-8000-000000000003",
+      "typeID": "effect.addBorder",
+      "title": "Add Border",
+      "position": { "x": 400, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "width": { "int": { "_0": 16 } },
+        "color": { "color": { "_0": { "red": 1.0, "green": 1.0, "blue": 1.0, "alpha": 1.0 } } }
+      }
+    },
+    {
+      "id": "40000001-0000-4000-8000-000000000004",
+      "typeID": "effect.dropShadow",
+      "title": "Drop Shadow",
+      "position": { "x": 580, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "radius": { "double": { "_0": 18.0 } },
+        "offsetX": { "double": { "_0": 0.0 } },
+        "offsetY": { "double": { "_0": 10.0 } },
+        "opacity": { "double": { "_0": 0.35 } },
+        "color": { "color": { "_0": { "red": 0.0, "green": 0.0, "blue": 0.0, "alpha": 1.0 } } }
+      }
+    },
+    {
+      "id": "40000001-0000-4000-8000-000000000005",
+      "typeID": "write.images",
+      "title": "Write Images",
+      "position": { "x": 760, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "folderPath": { "string": { "_0": "" } },
+        "askForOutputFolder": { "bool": { "_0": true } },
+        "fileNamePattern": { "string": { "_0": "[File Name]_docs" } },
+        "format": { "string": { "_0": "PNG" } },
+        "makeIndexedPNG": { "bool": { "_0": true } },
+        "indexedColors": { "int": { "_0": 128 } },
+        "indexedSpeed": { "int": { "_0": 3 } },
+        "indexedDither": { "bool": { "_0": true } },
+        "crushPNG": { "bool": { "_0": true } }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "40000001-0000-4000-9000-000000000001",
+      "sourceNodeID": "40000001-0000-4000-8000-000000000001",
+      "sourcePortIndex": 0,
+      "targetNodeID": "40000001-0000-4000-8000-000000000002",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "40000001-0000-4000-9000-000000000002",
+      "sourceNodeID": "40000001-0000-4000-8000-000000000002",
+      "sourcePortIndex": 0,
+      "targetNodeID": "40000001-0000-4000-8000-000000000003",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "40000001-0000-4000-9000-000000000003",
+      "sourceNodeID": "40000001-0000-4000-8000-000000000003",
+      "sourcePortIndex": 0,
+      "targetNodeID": "40000001-0000-4000-8000-000000000004",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "40000001-0000-4000-9000-000000000004",
+      "sourceNodeID": "40000001-0000-4000-8000-000000000004",
+      "sourcePortIndex": 0,
+      "targetNodeID": "40000001-0000-4000-8000-000000000005",
+      "targetPortIndex": 0
+    }
+  ]
+}

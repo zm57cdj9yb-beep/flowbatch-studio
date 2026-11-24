@@ -466,4 +466,26 @@ final class FlowBatchCoreTests: XCTestCase {
         XCTAssertNil(stripped.metadata[kCGImagePropertyGPSDictionary as String])
         XCTAssertEqual(stripped.metadata[kCGImagePropertyOrientation as String] as? Int, 6)
     }
+
+    func testAllExampleFlowbatchRecipesParseAndDryRun() throws {
+        let examplesDir = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("examples")
+        let files = try FileManager.default.contentsOfDirectory(at: examplesDir, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "flowbatch" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        XCTAssertGreaterThanOrEqual(files.count, 5)
+
+        let decoder = JSONDecoder()
+        for file in files {
+            let data = try Data(contentsOf: file)
+            let doc = try decoder.decode(WorkflowDocumentModel.self, from: data)
+            XCTAssertFalse(doc.nodes.isEmpty, "Example \(file.lastPathComponent) has no nodes")
+            XCTAssertEqual(doc.topologicalOrder().count, doc.nodes.count, "Example \(file.lastPathComponent) has a cycle")
+            let summary = DryRunEstimator.estimate(document: doc)
+            XCTAssertFalse(summary.statusText.isEmpty)
+        }
+    }
 }

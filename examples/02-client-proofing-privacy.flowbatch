@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "documentTitle": "02-client-proofing-privacy.flowbatch",
+  "viewportOffset": { "x": 32, "y": 40 },
+  "viewportZoom": 1.0,
+  "nodes": [
+    {
+      "id": "20000001-0000-4000-8000-000000000001",
+      "typeID": "read.folder",
+      "title": "Read Folder",
+      "position": { "x": 40, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "folderPath": { "string": { "_0": "" } },
+        "includeSubfolders": { "bool": { "_0": false } },
+        "filterExtensions": { "string": { "_0": "jpg,jpeg,heic,png" } }
+      }
+    },
+    {
+      "id": "20000001-0000-4000-8000-000000000002",
+      "typeID": "metadata.fixRotation",
+      "title": "Fix EXIF Rotation",
+      "position": { "x": 220, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {}
+    },
+    {
+      "id": "20000001-0000-4000-8000-000000000003",
+      "typeID": "metadata.removeGPS",
+      "title": "Remove GPS",
+      "position": { "x": 400, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {}
+    },
+    {
+      "id": "20000001-0000-4000-8000-000000000004",
+      "typeID": "watermark.text",
+      "title": "Text Watermark",
+      "position": { "x": 580, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "text": { "string": { "_0": "PROOF - [Date]" } },
+        "fontSize": { "double": { "_0": 26.0 } },
+        "color": { "color": { "_0": { "red": 1.0, "green": 1.0, "blue": 1.0, "alpha": 1.0 } } },
+        "opacity": { "double": { "_0": 0.72 } },
+        "anchor": { "string": { "_0": "bottomRight" } },
+        "marginX": { "int": { "_0": 28 } },
+        "marginY": { "int": { "_0": 24 } }
+      }
+    },
+    {
+      "id": "20000001-0000-4000-8000-000000000005",
+      "typeID": "transform.scale",
+      "title": "Scale",
+      "position": { "x": 760, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "mode": { "string": { "_0": "Fixed Width" } },
+        "width": { "int": { "_0": 1600 } },
+        "allowUpscale": { "bool": { "_0": false } }
+      }
+    },
+    {
+      "id": "20000001-0000-4000-8000-000000000006",
+      "typeID": "write.images",
+      "title": "Write Images",
+      "position": { "x": 940, "y": 140 },
+      "isEnabled": true,
+      "errorPolicy": "Skip Asset",
+      "parameters": {
+        "folderPath": { "string": { "_0": "" } },
+        "askForOutputFolder": { "bool": { "_0": true } },
+        "overwriteExisting": { "bool": { "_0": true } },
+        "fileNamePattern": { "string": { "_0": "[File Name]_proof" } },
+        "format": { "string": { "_0": "JPEG" } },
+        "quality": { "double": { "_0": 0.88 } }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "20000001-0000-4000-9000-000000000001",
+      "sourceNodeID": "20000001-0000-4000-8000-000000000001",
+      "sourcePortIndex": 0,
+      "targetNodeID": "20000001-0000-4000-8000-000000000002",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "20000001-0000-4000-9000-000000000002",
+      "sourceNodeID": "20000001-0000-4000-8000-000000000002",
+      "sourcePortIndex": 0,
+      "targetNodeID": "20000001-0000-4000-8000-000000000003",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "20000001-0000-4000-9000-000000000003",
+      "sourceNodeID": "20000001-0000-4000-8000-000000000003",
+      "sourcePortIndex": 0,
+      "targetNodeID": "20000001-0000-4000-8000-000000000004",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "20000001-0000-4000-9000-000000000004",
+      "sourceNodeID": "20000001-0000-4000-8000-000000000004",
+      "sourcePortIndex": 0,
+      "targetNodeID": "20000001-0000-4000-8000-000000000005",
+      "targetPortIndex": 0
+    },
+    {
+      "id": "20000001-0000-4000-9000-000000000005",
+      "sourceNodeID": "20000001-0000-4000-8000-000000000005",
+      "sourcePortIndex": 0,
+      "targetNodeID": "20000001-0000-4000-8000-000000000006",
+      "targetPortIndex": 0
+    }
+  ]
+}
