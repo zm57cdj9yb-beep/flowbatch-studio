@@ -1,6 +1,6 @@
-# FlowBatch Studio
+# FlowBatch Studio — Open-Source Retrobatch Alternative
 
-An open-source, offline, node-based batch image processor written in native **Swift 6, AppKit, and Metal/Core Image** for macOS, inspired by [Retrobatch](https://flyingmeat.com/retrobatch/). Includes an early, experimental **Windows 11** port (`windows/`) built with Tauri 2 and Rust that shares the same `.flowbatch` JSON workflow format.
+An independent, free, MIT-licensed **Retrobatch** alternative and node-based batch image processor — built natively in **Swift 6, AppKit, and Metal/Core Image** for macOS, with an experimental **Windows 11** port (`windows/`) in Tauri 2 and Rust sharing the same `.flowbatch` JSON workflow format. *(Inspired by [Retrobatch](https://flyingmeat.com/retrobatch/); not affiliated with Flying Meat Inc.)*
 
 [Latest Release (macOS)](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest) · [Changelog](CHANGELOG.md) · [Example Workflows](examples/) · [Benchmarks](benchmarks/RESULTS.md) · [Discussions](https://github.com/zm57cdj9yb-beep/flowbatch-studio/discussions) · [MIT License](LICENSE)
 
