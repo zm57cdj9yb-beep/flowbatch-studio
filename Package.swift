@@ -64,6 +64,11 @@ let package = Package(
             name: "FlowBatchCoreTests",
             dependencies: ["FlowBatchCore"],
             path: "Tests/FlowBatchCoreTests"
+        ),
+        .executableTarget(
+            name: "FlowBatchBench",
+            dependencies: ["FlowBatchCore"],
+            path: "benchmarks/swift-bench"
         )
     ]
 )
