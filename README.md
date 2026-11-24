@@ -2,7 +2,7 @@
 
 An open-source, offline, node-based batch image processor written in native **Swift 6, AppKit, and Metal/Core Image** for macOS, inspired by [Retrobatch](https://flyingmeat.com/retrobatch/). Includes an early, experimental **Windows 11** port (`windows/`) built with Tauri 2 and Rust that shares the same `.flowbatch` JSON workflow format.
 
-[Latest Release (macOS)](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest) · [Example Workflows](examples/) · [Benchmarks](benchmarks/RESULTS.md) · [Discussions](https://github.com/zm57cdj9yb-beep/flowbatch-studio/discussions) · [MIT License](LICENSE)
+[Latest Release (macOS)](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest) · [Changelog](CHANGELOG.md) · [Example Workflows](examples/) · [Benchmarks](benchmarks/RESULTS.md) · [Discussions](https://github.com/zm57cdj9yb-beep/flowbatch-studio/discussions) · [MIT License](LICENSE)
 
 ![FlowBatch Studio macOS 3-pane workspace with node library, directed workflow graph, Write Images inspector popover, and live Metal preview](docs/assets/hero-app.jpg)
 
@@ -69,7 +69,7 @@ Five ready-to-open `.flowbatch` recipes live in [`examples/`](examples/README.md
 ### macOS 14+ (Apple Silicon)
 
 **Pre-built release:**
-1. Download `FlowBatch-Studio-v1.0.0-macOS-arm64.zip` from [GitHub Releases](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest).
+1. Download `FlowBatch-Studio-v1.0.1-macOS-arm64.zip` (and optional `SHA256SUMS.txt`) from [GitHub Releases](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest).
 2. Unzip and move `FlowBatch Studio.app` to `/Applications`.
 3. This open-source build is **ad-hoc signed** (not Apple Developer notarized), so clear Gatekeeper quarantine once before launching:
    ```bash
