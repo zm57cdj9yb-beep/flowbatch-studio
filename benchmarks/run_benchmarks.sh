@@ -29,12 +29,12 @@ echo "=== Building Release Benchmark Binaries ==="
 SWIFT_BIN="$ROOT_DIR/.build/release/FlowBatchBench"
 RUST_BIN="$ROOT_DIR/windows/src-tauri/target/release/examples/bench_png"
 
-# Prepare reproducible PNG inputs from files tracked in the repository
-sips -s format png "$ROOT_DIR/docs/assets/hero-app.jpg" --out "$TMP_DIR/ui-screenshot.png" >/dev/null
+# Use genuine lossless PNG fixtures tracked in the repository (never round-tripped through JPEG)
+cp "$ROOT_DIR/benchmarks/fixtures/ui-lossless.png" "$TMP_DIR/ui-screenshot.png"
 cp "$ROOT_DIR/windows/src-tauri/icons/icon.png" "$TMP_DIR/app-icon-alpha.png"
 
 echo ""
-echo "=== Input 1: Desktop UI Screenshot (1600x969 RGB PNG from docs/assets/hero-app.jpg) ==="
+echo "=== Input 1: Native Lossless Desktop UI Screenshot (1440x872 PNG from benchmarks/fixtures/ui-lossless.png) ==="
 "$SWIFT_BIN" png "$TMP_DIR/ui-screenshot.png" "$TMP_DIR/ui-swift-crushed.png"
 "$RUST_BIN"  png "$TMP_DIR/ui-screenshot.png" "$TMP_DIR/ui-rust-crushed.png"
 

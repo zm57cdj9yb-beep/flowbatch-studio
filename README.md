@@ -10,30 +10,31 @@ An open-source, offline, node-based batch image processor written in native **Sw
 
 FlowBatch Studio lets you wire reusable directed acyclic graphs (DAGs) to batch resize, watermark, strip EXIF/GPS metadata, branch by rules, generate multi-scale sets, build multi-page PDFs, and quantize indexed PNGs — entirely offline with no subscriptions or Electron overhead.
 
-- **Zero external Swift dependencies on macOS:** [`Package.swift`](Package.swift) links only Apple frameworks (`AppKit`, `SwiftUI`, `CoreImage`, `Metal`, `ImageIO`, `PDFKit`, `Vision`, `Photos`, `ScreenCaptureKit`, `JavaScriptCore`) plus system `zlib` (`-lz`).
-- **Visual DAG canvas:** 67 built-in nodes across 15 categories, cycle detection, directional Bézier wires, `Rules` matched/unmatched dual-port routing, `Multi Scale` fan-out, live preview, and coalesced undo/redo.
-- **Clean-room Indexed PNG encoder:** Hand-written Median-Cut quantizer (2–256 colors) with Cauchy-Schwarz luminance branch-and-bound nearest-palette pruning, Floyd-Steinberg dithering, 1/2/4/8-bpp packing, manual `IHDR`/`sRGB`/`PLTE`/`tRNS`/`IDAT`/`IEND` chunk assembly, and lossless Crush / Brute-Force trials (Swift `CZlib` on macOS, `oxipng` on Windows).
-- **Bounded macOS memory architecture:** Decodes contact-sheet tiles at most 256px via `CGImageSourceCreateThumbnailAtIndex` (64 MB `NSCache`), keeps a cached GPU `previewContext` with generation-ID cancellation, and runs full-resolution exports through a separate `exportContext` (`cacheIntermediates: false`, `memoryTarget: 512` MB) with per-asset `autoreleasepool` blocks and `DispatchSourceMemoryPressure` eviction.
-- **Process-isolated JavaScript node:** Runs user `processAsset(asset)` scripts in a separate [`FlowBatchJSWorker`](Sources/FlowBatchJSWorker/main.swift) (`JSVirtualMachine`) subprocess over stdin/stdout JSON with no Cocoa or `FileManager` bindings and a 2.0s `SIGTERM` watchdog.
-- **Portable `.flowbatch` JSON workflows:** Plain-text, Git-friendly workflow files parsed by both the macOS Swift core and the experimental Rust backend (`windows/src-tauri/`).
+- **Zero external Swift dependencies on macOS:** [`Package.swift`](Package.swift) links only Apple frameworks plus system `zlib` (`-lz`).
+- **Visual DAG editor:** 67 built-in nodes across 15 categories, cycle detection, directional Bézier wires, `Rules` matched/unmatched dual-port routing, `Multi Scale` fan-out, live Metal preview, and coalesced undo/redo.
+- **Built-in Indexed PNG quantization & crush:** Clean-room 2–256 color palette quantization with optional Floyd-Steinberg dithering, alpha transparency (`tRNS`), and lossless crush (`CZlib` on macOS, `oxipng` on Windows).
+- **Memory-bounded macOS pipeline:** Separates subsampled contact-sheet thumbnails, cached GPU previews, and bounded full-resolution disk exports so large batches stay under 50 MB RSS.
+- **Process-isolated JavaScript automation:** Run custom per-asset `processAsset(asset)` scripts with a hard 2.0-second timeout and no host filesystem/Cocoa API access.
+- **Portable `.flowbatch` JSON workflows:** Plain-text, Git-friendly workflow files shared between the macOS Swift app and the experimental Windows Rust/Tauri 2 port (`windows/`).
 
 ## Benchmarks & Visual Proof
 
-All numbers below were measured on an **Apple M2 (8 GB RAM, macOS 27.2)** using release builds (`swift build -c release` / `cargo build --release`). Reproduce locally with [`./benchmarks/run_benchmarks.sh`](benchmarks/run_benchmarks.sh) or inspect the full methodology and raw outputs in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md).
+All numbers below were measured on an **Apple M2 (8 GB RAM, macOS 27.2)** using release builds (`swift build -c release` / `cargo build --release`) against **native lossless PNG fixtures** (never round-tripped through JPEG). Reproduce locally with [`./benchmarks/run_benchmarks.sh`](benchmarks/run_benchmarks.sh) or inspect full methodology and raw outputs in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md).
 
-| Workload | Baseline | FlowBatch Indexed PNG (256c) | Size Reduction | Median Time | Peak RSS |
+| Workload | On-Disk Lossless PNG | FlowBatch Indexed PNG (256c) | Size Reduction | Median Time | Peak RSS |
 |---|---:|---:|---:|---:|---:|
-| Desktop UI capture (`1600×969` RGB PNG) — Swift fast (`speed=5`) | 810.3 KB | **239.6 KB** | **-70.4%** | **49.0 ms** | — |
-| Desktop UI capture (`1600×969` RGB PNG) — Swift dither + Crush | 810.3 KB | **311.3 KB** | **-61.6%** | 1,391.2 ms | — |
-| Desktop UI capture (`1600×969` RGB PNG) — Rust fast (`speed=5`) | 860.4 KB | **137.4 KB** | **-84.0%** | 261.7 ms | — |
-| Transparent RGBA icon (`512×512`, `PLTE`+`tRNS`) — Swift fast | 172.6 KB | **22.8 KB** | **-86.8%** | **7.3 ms** | — |
-| Transparent RGBA icon (`512×512`, `PLTE`+`tRNS`) — Rust fast | 169.6 KB | **17.1 KB** | **-89.9%** | 44.0 ms | — |
-| 30-asset batch (`Watermark -> Scale 800px -> Indexed PNG`) — Swift 6 | — | 30 files (948 KB) | — | **601.8 ms** (49.9 img/s) | **46.9 MB** |
-| 30-asset batch (`Watermark -> Scale 800px -> Indexed PNG`) — Rust* | — | 30 files (712 KB) | — | 2,080.1 ms (14.4 img/s) | 621.5 MB |
+| Native lossless UI capture (`1440×872` RGBA) — Swift fast (`speed=5`) | 950.7 KB | **149.6 KB** | **-84.3%** | **34.0 ms** | — |
+| Native lossless UI capture (`1440×872` RGBA) — Swift dither + Crush | 950.7 KB | **253.0 KB** | **-73.4%** | 1,227.3 ms | — |
+| Native lossless UI capture (`1440×872` RGBA) — Rust fast (`speed=5`) | 950.7 KB | **103.4 KB** | **-89.1%** | **26.7 ms** | — |
+| Native lossless UI capture (`1440×872` RGBA) — Rust dither + `oxipng` Brute-Force | 950.7 KB | **227.2 KB** | **-76.1%** | 1,208.9 ms | — |
+| Transparent RGBA icon (`512×512`, `PLTE`+`tRNS`) — Swift fast | 172.1 KB | **22.8 KB** | **-86.8%** | **7.2 ms** | — |
+| Transparent RGBA icon (`512×512`, `PLTE`+`tRNS`) — Rust fast | 172.1 KB | **17.8 KB** | **-89.7%** | **4.8 ms** | — |
+| 30-asset batch (`Watermark -> Scale 800px -> Indexed PNG`) — Swift 6 | — | 30 files (948 KB) | — | **556.8 ms** (53.9 img/s) | **46.9 MB** |
+| 30-asset batch (`Watermark -> Scale 800px -> Indexed PNG`) — Rust* | — | 30 files (714 KB) | — | **382.6 ms** (78.4 img/s) | **109.6 MB** |
 
-*\*Rust backend measured on the same Apple M2 macOS arm64 machine; current experimental implementation buffers decoded stages in RAM rather than streaming per asset.*
+*\*Rust backend measured on the same Apple M2 macOS arm64 machine using Rayon parallelism and bounded 4-asset chunk streaming.*
 
-![Side-by-side comparison of 810 KB 24-bit PNG vs 311 KB Clean-Room Indexed PNG with 300% nearest-neighbor pixel zoom](docs/assets/indexed-png-proof.png)
+![Side-by-side comparison of 951 KB native lossless PNG vs 253 KB Clean-Room Indexed PNG with 300% nearest-neighbor pixel zoom of UI typography and sunset gradient](docs/assets/indexed-png-proof.png)
 
 ## Comparison With Existing Tools
 
@@ -46,7 +47,7 @@ All numbers below were measured on an **Apple M2 (8 GB RAM, macOS 27.2)** using 
 | Format Breadth | 10 macOS / 8 Windows | ~15 + deep PSD layers | **200+ formats** | **500+ formats** | Modern web codecs (AVIF/JXL/WebP) |
 | Headless Linux / Server CI | GUI-first | macOS CLI only | **Best-in-class** | `nconvert` CLI | CLI archived |
 | Code Signing / Notarization | Ad-hoc signed today | **Apple Notarized** | Signed / Homebrew | **Signed** | Browser sandbox |
-| App Size | ~3.5 MB zip (macOS) | ~35 MB | CLI binaries | ~80–120 MB | Zero install |
+| Packaging | ~3.5 MB zip (macOS); source build (Windows) | Native macOS app | CLI binaries | Desktop installer | Zero install |
 
 **When another tool is a better fit:**
 - Use **ImageMagick** or **libvips** for headless Linux servers, Docker pipelines, or exotic formats.
@@ -121,7 +122,7 @@ npx tauri build --bundles nsis,msi
   - Core image transforms, filters, DAG routing, `Multi Scale`, clean-room Indexed PNG + `oxipng`, WebP/ICO/PNG/JPEG/TIFF/GIF/BMP export, and pure-Rust multi-page PDF 1.4 Maker/Extractor work and pass unit tests.
   - Several macOS-native nodes are currently stubs/no-ops on Windows: `Prompt for Files`, `Clipboard`, `Screenshot`, `Write to Clipboard`, `Open in Another App`, `Fix EXIF Rotation`, and `Layer & Page Splitter`.
   - EXIF/GPS/ICC metadata writing, camera RAW decoding, full JavaScript execution (currently a minimal zero-side-effect inline rule evaluator), and TrueType watermark text rendering (currently a 5×7 uppercase ASCII bitmap fallback) are not yet implemented on Windows.
-  - Windows batch execution currently buffers decoded images per stage in RAM (`621.5 MB` Peak RSS on 30 assets) rather than streaming per asset.
+  - Standard DAGs stream in bounded 4-asset Rayon chunks (`109.6 MB` Peak RSS on 30 assets); multi-asset collector nodes (`PDF Maker`, `Image Grid`, `Animated Image`, `Sort Order`) still buffer their input stage in RAM.
 
 ## Built-In Nodes
 

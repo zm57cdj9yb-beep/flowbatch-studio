@@ -49,7 +49,7 @@ To keep `.flowbatch` files portable between macOS and Windows:
 
 ## High-Impact Areas Looking for Help
 
-- **Windows parity:** Replacing the 5×7 ASCII bitmap watermark fallback with TrueType font rendering (`ab_glyph` / `fontdue`), implementing EXIF/GPS/ICC metadata writing on Windows, and streaming batch execution instead of buffering full stages in RAM.
+- **Windows parity:** Replacing the 5×7 ASCII bitmap watermark fallback with TrueType font rendering (`ab_glyph` / `fontdue`), implementing EXIF/GPS/ICC metadata writing on Windows, and embedding a full JS engine for the `JavaScript` node.
 - **macOS concurrency:** Wiring bounded `TaskGroup` concurrency to `PipelineRunner.safeExportConcurrencyLimit` while keeping peak RSS under 512 MB on 8 GB Macs.
 - **Distribution:** Signed macOS notarization / Homebrew Cask and Windows Authenticode / Winget packaging.
 
