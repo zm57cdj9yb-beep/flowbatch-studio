@@ -139,7 +139,7 @@ public enum TransformWatermarkExecutors {
         var cropW = ext.width
         var cropH = ext.height
 
-        if mode == "Pixels" {
+        if mode == "Pixels" || mode == "Fixed Size" {
             cropW = min(ext.width, CGFloat(max(1, node.parameters["width"]?.intValue ?? 800)))
             cropH = min(ext.height, CGFloat(max(1, node.parameters["height"]?.intValue ?? 800)))
         } else {

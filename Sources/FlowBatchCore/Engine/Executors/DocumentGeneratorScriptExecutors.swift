@@ -93,7 +93,7 @@ public enum DocumentGeneratorScriptExecutors {
 
         case NodeTypeID.pdfMaker:
             let fileName = node.parameters["fileName"]?.stringValue ?? "Combined"
-            let margin = CGFloat(max(0, node.parameters["margin"]?.intValue ?? 0))
+            let margin = CGFloat(max(0.0, node.parameters["margin"]?.doubleValue ?? Double(node.parameters["margin"]?.intValue ?? 0)))
             let pdfDoc = PDFDocument()
             let cs = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
 
@@ -472,7 +472,7 @@ public enum DocumentGeneratorScriptExecutors {
         guard let workerURL = locateJSWorker(overrideURL: context.jsWorkerURL) else {
             throw NodeExecutionError.scriptFailed("FlowBatchJSWorker helper executable not found.")
         }
-        let code = node.parameters["code"]?.stringValue ?? ""
+        let code = node.parameters["code"]?.stringValue ?? node.parameters["script"]?.stringValue ?? ""
         var stringMeta: [String: String] = asset.customVariables
         if let tiff = asset.metadata[kCGImagePropertyTIFFDictionary as String] as? [String: Any],
            let artist = tiff[kCGImagePropertyTIFFArtist as String] as? String {

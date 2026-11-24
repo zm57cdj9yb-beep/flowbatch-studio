@@ -611,10 +611,17 @@ public enum IndexedPNGQuantizer {
             guard let bestData else { throw IndexedPNGError.compressionFailed }
             return bestData
         } else if options.crush {
-            let raw = buildFilteredStream(packedRows: packedRows, mode: -1)
-            let d1 = zlibCompress(raw, level: 9, strategy: FBZlibStrategyDefault)
-            let d2 = zlibCompress(raw, level: 9, strategy: FBZlibStrategyFiltered)
-            let best = [d1, d2].compactMap { $0 }.min(by: { $0.count < $1.count })
+            // For indexed Color Type 3, Filter None (0) often beats spatial delta filters;
+            // compare both Filter None and Adaptive SAD at zlib level 9 and keep the smallest output.
+            let rawNone = buildFilteredStream(packedRows: packedRows, mode: 0)
+            let rawAdaptive = buildFilteredStream(packedRows: packedRows, mode: -1)
+            let candidates: [Data?] = [
+                zlibCompress(rawNone, level: 9, strategy: FBZlibStrategyDefault),
+                zlibCompress(rawNone, level: 9, strategy: FBZlibStrategyRLE),
+                zlibCompress(rawAdaptive, level: 9, strategy: FBZlibStrategyDefault),
+                zlibCompress(rawAdaptive, level: 9, strategy: FBZlibStrategyFiltered)
+            ]
+            let best = candidates.compactMap { $0 }.min(by: { $0.count < $1.count })
             guard let best else { throw IndexedPNGError.compressionFailed }
             return best
         } else {

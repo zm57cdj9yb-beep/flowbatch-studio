@@ -370,4 +370,32 @@ mod tests {
         assert_eq!(covered.len(), 67);
         let _ = fs::remove_dir_all(&dir);
     }
+
+    #[test]
+    fn test_all_example_flowbatch_recipes_parse_and_dry_run() {
+        let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("examples");
+        let mut count = 0usize;
+        for entry in fs::read_dir(&examples_dir).expect("read examples dir") {
+            let path = entry.expect("dir entry").path();
+            if path.extension().and_then(|s| s.to_str()) == Some("flowbatch") {
+                let raw = fs::read_to_string(&path).expect("read example .flowbatch");
+                let doc: WorkflowDocumentModel = serde_json::from_str(&raw)
+                    .unwrap_or_else(|e| panic!("Failed to parse {}: {}", path.display(), e));
+                assert!(!doc.nodes.is_empty(), "Empty nodes in {}", path.display());
+                assert_eq!(
+                    doc.topological_order().len(),
+                    doc.nodes.len(),
+                    "Cycle detected in {}",
+                    path.display()
+                );
+                let report = pipeline::dry_run(&doc);
+                assert!(!report.status_summary.is_empty());
+                count += 1;
+            }
+        }
+        assert!(count >= 5, "Expected at least 5 example .flowbatch workflows");
+    }
 }

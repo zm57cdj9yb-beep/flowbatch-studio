@@ -245,7 +245,7 @@ public enum ReadWriteExecutors {
                     ? (CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB())
                     : (asset.targetColorSpace ?? image.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB())
 
-                if targetFormat == "PNG" && (makeIndexed || crushPNG || bruteForce) {
+                if targetFormat == "PNG" && makeIndexed {
                     let pngData = try IndexedPNGQuantizer.encode(
                         image: image,
                         context: context.exportContext,

@@ -1459,7 +1459,7 @@ fn execute_single_asset_node(
         }
         node_type::COLOR_PROFILE => {
             let prof = node.param_str("profile", "sRGB");
-            if prof == "Grayscale" {
+            if prof == "Grayscale" || prof == "Generic Gray" {
                 asset.image = DynamicImage::ImageRgba8(asset.image.grayscale().to_rgba8());
             }
             asset.color_space = prof;
@@ -1718,9 +1718,12 @@ fn execute_single_asset_node(
 
         // --- Script ---
         node_type::JAVA_SCRIPT => {
-            let code = node.param_str("script", "");
-            // Safe zero-side-effect inline rule evaluator (supports fileName suffix & skip)
-            if code.contains("asset.skip = true") {
+            let code = {
+                let c = node.param_str("code", "");
+                if !c.is_empty() { c } else { node.param_str("script", "") }
+            };
+            // Lightweight zero-side-effect inline rule evaluator (supports skip & filename suffix)
+            if code.contains("asset.skip = true") || code.contains("asset.skip()") {
                 return Ok(vec![]);
             }
             if let Some(cap) = Regex::new(r#"asset\.fileName\s*\+=\s*["']([^"']+)["']"#)
@@ -1788,6 +1791,11 @@ fn execute_single_asset_node(
                 "Percentage" => {
                     let pct = node.param_f64("percent", 50.0).clamp(1.0, 400.0) / 100.0;
                     (((w as f64 * pct).round() as u32).max(1), ((h as f64 * pct).round() as u32).max(1))
+                }
+                "Exact Size" => {
+                    let tw = node.param_i64("width", 800).max(1) as u32;
+                    let th = node.param_i64("height", 600).max(1) as u32;
+                    (tw, th)
                 }
                 _ => {
                     let bw = node.param_i64("width", 800).max(1) as f64;

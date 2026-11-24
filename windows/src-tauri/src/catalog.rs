@@ -931,9 +931,9 @@ pub fn all_definitions() -> Vec<NodeDefinition> {
         ),
         node(
             node_type::ML_SUPER_RESOLUTION,
-            "ML Super Resolution",
+            "Upscale & Sharpen",
             NodeCategory::Transform,
-            "High-quality Lanczos 2×/4× upscaling with adaptive edge sharpening.",
+            "High-quality Lanczos 2×/4× upscaling with luminance edge sharpening.",
             vec![
                 p_picker("multiplier", "Scale Factor", &["2x", "4x"], "2x"),
                 p_slider("edgeSharpen", "Edge Sharpen", 0.0, 2.0, 0.05, "", 0.5),

@@ -110,7 +110,7 @@ public enum NodeCatalog {
     ]
 
     public static let outputFormats: [String] = [
-        "Original", "PNG", "JPEG", "HEIC", "AVIF", "TIFF", "GIF", "JPEG 2000", "BMP", "PDF", "PSD"
+        "Original", "PNG", "JPEG", "HEIC", "AVIF", "TIFF", "GIF", "JPEG 2000", "BMP", "PDF"
     ]
 
     public static let allDefinitions: [NodeDefinition] = [
@@ -779,9 +779,9 @@ public enum NodeCatalog {
         ),
         NodeDefinition(
             typeID: NodeTypeID.mlSuperResolution,
-            title: "ML Super Resolution",
+            title: "Upscale & Sharpen",
             category: .transform,
-            summary: "2x/4x edge-preserving high-quality upscale",
+            summary: "2x/4x Lanczos upscale with luminance edge sharpening",
             parameters: [
                 ParameterDescriptor(key: "multiplier", label: "Factor", kind: .picker(options: ["2x", "4x"]), defaultValue: .string("2x")),
                 ParameterDescriptor(key: "edgeSharpen", label: "Edge Detail", kind: .slider(min: 0, max: 1, step: 0.05, unit: ""), defaultValue: .double(0.45))
