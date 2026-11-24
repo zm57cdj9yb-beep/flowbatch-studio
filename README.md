@@ -1,384 +1,157 @@
-<div align="center">
+# FlowBatch Studio
 
-<img src="Resources/AppIcon.svg" width="120" height="120" alt="FlowBatch Studio Icon" />
+An open-source, offline, node-based batch image processor written in native **Swift 6, AppKit, and Metal/Core Image** for macOS, inspired by [Retrobatch](https://flyingmeat.com/retrobatch/). Includes an early, experimental **Windows 11** port (`windows/`) built with Tauri 2 and Rust that shares the same `.flowbatch` JSON workflow format.
 
-<h1>FlowBatch Studio</h1>
+[Latest Release (macOS)](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest) · [Example Workflows](examples/) · [Benchmarks](benchmarks/RESULTS.md) · [Discussions](https://github.com/zm57cdj9yb-beep/flowbatch-studio/discussions) · [MIT License](LICENSE)
 
-<p><strong>Cross-platform node-based batch image processor — Native Swift 6 + Metal on macOS &amp; Tauri 2 + Rust on Windows 11.</strong></p>
+![FlowBatch Studio macOS 3-pane workspace with node library, directed workflow graph, Write Images inspector popover, and live Metal preview](docs/assets/hero-app.jpg)
 
-<p>
-  <a href="https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest">
-    <img src="https://img.shields.io/github/v/release/zm57cdj9yb-beep/flowbatch-studio?style=for-the-badge&color=2563EB&label=Release" alt="Latest Release" />
-  </a>
-  <img src="https://img.shields.io/badge/macOS-14.0%2B%20(Swift%206)-111827?style=for-the-badge&logo=apple&logoColor=white" alt="macOS 14+ Swift 6" />
-  <img src="https://img.shields.io/badge/Windows%2011-Tauri%202%20%2B%20Rust-0078D4?style=for-the-badge&logo=rust&logoColor=white" alt="Windows 11 Tauri 2 + Rust" />
-  <img src="https://img.shields.io/badge/Nodes-67%20Across%2015%20Categories-7C3AED?style=for-the-badge" alt="67 Nodes" />
-  <img src="https://img.shields.io/badge/Tests-27%2F27%20Passing-059669?style=for-the-badge" alt="27/27 Passing" />
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-334155?style=for-the-badge" alt="MIT License" />
-  </a>
-</p>
+## Overview
 
-<p>
-  <a href="#-windows-11-x64--build-from-source--installers">
-    <img src="https://img.shields.io/badge/%F0%9F%AA%9F%20%20Windows%2011%20Edition%20(Tauri%202%20%2B%20Rust)-0078D4?style=for-the-badge" alt="FlowBatch Studio for Windows 11" />
-  </a>
-  &nbsp;
-  <a href="https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest">
-    <img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20%20Download%20for%20macOS%20(Apple%20Silicon)-111827?style=for-the-badge" alt="Download FlowBatch Studio for macOS" />
-  </a>
-</p>
+FlowBatch Studio lets you wire reusable directed acyclic graphs (DAGs) to batch resize, watermark, strip EXIF/GPS metadata, branch by rules, generate multi-scale sets, build multi-page PDFs, and quantize indexed PNGs — entirely offline with no subscriptions or Electron overhead.
 
-<p>
-  <a href="#-live-demo">Live Demo</a> •
-  <a href="#-windows-11-edition-tauri-2--rust">Windows 11</a> •
-  <a href="#-features">Features</a> •
-  <a href="#%EF%B8%8F-under-the-hood">Architecture</a> •
-  <a href="#-download--build-from-source">Download &amp; Build</a> •
-  <a href="#-all-67-built-in-nodes">All 67 Nodes</a> •
-  <a href="#-faq">FAQ</a> •
-  <a href="#-roadmap">Roadmap</a>
-</p>
+- **Zero external Swift dependencies on macOS:** [`Package.swift`](Package.swift) links only Apple frameworks (`AppKit`, `SwiftUI`, `CoreImage`, `Metal`, `ImageIO`, `PDFKit`, `Vision`, `Photos`, `ScreenCaptureKit`, `JavaScriptCore`) plus system `zlib` (`-lz`).
+- **Visual DAG canvas:** 67 built-in nodes across 15 categories, cycle detection, directional Bézier wires, `Rules` matched/unmatched dual-port routing, `Multi Scale` fan-out, live preview, and coalesced undo/redo.
+- **Clean-room Indexed PNG encoder:** Hand-written Median-Cut quantizer (2–256 colors) with Cauchy-Schwarz luminance branch-and-bound nearest-palette pruning, Floyd-Steinberg dithering, 1/2/4/8-bpp packing, manual `IHDR`/`sRGB`/`PLTE`/`tRNS`/`IDAT`/`IEND` chunk assembly, and lossless Crush / Brute-Force trials (Swift `CZlib` on macOS, `oxipng` on Windows).
+- **Bounded macOS memory architecture:** Decodes contact-sheet tiles at most 256px via `CGImageSourceCreateThumbnailAtIndex` (64 MB `NSCache`), keeps a cached GPU `previewContext` with generation-ID cancellation, and runs full-resolution exports through a separate `exportContext` (`cacheIntermediates: false`, `memoryTarget: 512` MB) with per-asset `autoreleasepool` blocks and `DispatchSourceMemoryPressure` eviction.
+- **Process-isolated JavaScript node:** Runs user `processAsset(asset)` scripts in a separate [`FlowBatchJSWorker`](Sources/FlowBatchJSWorker/main.swift) (`JSVirtualMachine`) subprocess over stdin/stdout JSON with no Cocoa or `FileManager` bindings and a 2.0s `SIGTERM` watchdog.
+- **Portable `.flowbatch` JSON workflows:** Plain-text, Git-friendly workflow files parsed by both the macOS Swift core and the experimental Rust backend (`windows/src-tauri/`).
 
-<br />
+## Benchmarks & Visual Proof
 
-<img src="docs/assets/hero-app.jpg" width="960" alt="FlowBatch Studio 3-Pane macOS Workspace" />
+All numbers below were measured on an **Apple M2 (8 GB RAM, macOS 27.2)** using release builds (`swift build -c release` / `cargo build --release`). Reproduce locally with [`./benchmarks/run_benchmarks.sh`](benchmarks/run_benchmarks.sh) or inspect the full methodology and raw outputs in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md).
 
-<p><sub><em>Live macOS capture — 15-category searchable Node Library, 60fps AppKit Graph Canvas with anchored Write Images Popover, and live Metal Preview + 30-asset Thumbnail Contact Sheet.</em></sub></p>
+| Workload | Baseline | FlowBatch Indexed PNG (256c) | Size Reduction | Median Time | Peak RSS |
+|---|---:|---:|---:|---:|---:|
+| Desktop UI capture (`1600×969` RGB PNG) — Swift fast (`speed=5`) | 810.3 KB | **239.6 KB** | **-70.4%** | **49.0 ms** | — |
+| Desktop UI capture (`1600×969` RGB PNG) — Swift dither + Crush | 810.3 KB | **311.3 KB** | **-61.6%** | 1,391.2 ms | — |
+| Desktop UI capture (`1600×969` RGB PNG) — Rust fast (`speed=5`) | 860.4 KB | **137.4 KB** | **-84.0%** | 261.7 ms | — |
+| Transparent RGBA icon (`512×512`, `PLTE`+`tRNS`) — Swift fast | 172.6 KB | **22.8 KB** | **-86.8%** | **7.3 ms** | — |
+| Transparent RGBA icon (`512×512`, `PLTE`+`tRNS`) — Rust fast | 169.6 KB | **17.1 KB** | **-89.9%** | 44.0 ms | — |
+| 30-asset batch (`Watermark -> Scale 800px -> Indexed PNG`) — Swift 6 | — | 30 files (948 KB) | — | **601.8 ms** (49.9 img/s) | **46.9 MB** |
+| 30-asset batch (`Watermark -> Scale 800px -> Indexed PNG`) — Rust* | — | 30 files (712 KB) | — | 2,080.1 ms (14.4 img/s) | 621.5 MB |
 
-<br />
+*\*Rust backend measured on the same Apple M2 macOS arm64 machine; current experimental implementation buffers decoded stages in RAM rather than streaming per asset.*
 
-<table>
-  <tr>
-    <td width="25%" valign="top">
-      <strong>🧩 67 Cross-Platform Nodes</strong><br />
-      <sub>15 collapsible categories from Read/Write, Blur &amp; Color to PDF, Rules, Watermarks &amp; Scripts — 1:1 parity on macOS &amp; Windows 11.</sub>
-    </td>
-    <td width="25%" valign="top">
-      <strong>⚡ Metal + Rayon Speed</strong><br />
-      <sub>GPU-accelerated Core Image + 512MB budget on macOS; multi-core Rust <code>rayon</code> parallel pipelines inside a ~5.6 MB Tauri 2 binary on Windows 11.</sub>
-    </td>
-    <td width="25%" valign="top">
-      <strong>🗜️ Clean-Room Indexed PNG</strong><br />
-      <sub>Median-Cut (2–256 colors), Floyd-Steinberg dither &amp; manual <code>PLTE</code>/<code>tRNS</code>/<code>zlib</code> chunk assembly + <code>oxipng</code> brute-force crush.</sub>
-    </td>
-    <td width="25%" valign="top">
-      <strong>🔄 Shared <code>.flowbatch</code> Format</strong><br />
-      <sub>Save a workflow on macOS, open &amp; run it directly on Windows 11 (and vice versa) with full JSON wire compatibility.</sub>
-    </td>
-  </tr>
-</table>
+![Side-by-side comparison of 810 KB 24-bit PNG vs 311 KB Clean-Room Indexed PNG with 300% nearest-neighbor pixel zoom](docs/assets/indexed-png-proof.png)
 
-</div>
+## Comparison With Existing Tools
 
----
+| Capability | FlowBatch Studio | Retrobatch Pro | ImageMagick | XnConvert | Squoosh |
+|---|---|---|---|---|---|
+| License & Price | MIT (Free) | Proprietary ($49.99) | Apache 2.0 (Free) | Free personal / Paid commercial | Apache 2.0 (Free) |
+| Platforms | macOS 14+ (stable), Windows 11 (experimental) | macOS only | macOS, Windows, Linux | macOS, Windows, Linux | Browser |
+| Visual DAG Branching | Yes (`Rules` dual-port, `Multi Scale`, multi-source) | Yes (mature) | No (CLI) | No (linear action list) | No (single image) |
+| Built-in Indexed PNG + Crush | Yes (clean-room Swift + Rust `oxipng`) | Yes | Via flags / `pngquant` | Yes | Yes (`oxipng` + quant) |
+| Format Breadth | 10 macOS / 8 Windows | ~15 + deep PSD layers | **200+ formats** | **500+ formats** | Modern web codecs (AVIF/JXL/WebP) |
+| Headless Linux / Server CI | GUI-first | macOS CLI only | **Best-in-class** | `nconvert` CLI | CLI archived |
+| Code Signing / Notarization | Ad-hoc signed today | **Apple Notarized** | Signed / Homebrew | **Signed** | Browser sandbox |
+| App Size | ~3.5 MB zip (macOS) | ~35 MB | CLI binaries | ~80–120 MB | Zero install |
 
-## 🎬 Live Demo
+**When another tool is a better fit:**
+- Use **ImageMagick** or **libvips** for headless Linux servers, Docker pipelines, or exotic formats.
+- Use **Retrobatch Pro** if you want a notarized, commercially supported macOS app with deep PSD layer support and mature Apple Shortcuts integration.
+- Use **Squoosh** for visually tuning single-image WebP/AVIF/JXL compression sliders in a browser.
 
-<div align="center">
+## Example Workflows
 
-<img src="docs/assets/demo-preview.gif" width="840" alt="FlowBatch Studio Interactive Demo" />
+Five ready-to-open `.flowbatch` recipes live in [`examples/`](examples/README.md) and are validated automatically by both Swift and Rust test suites:
 
-<p><sub><em>26.5s interactive launch edit created with <a href="https://github.com/heygen-com/hyperframes">HyperFrames</a> — showing live Metal thumbnail scrubbing, 300% zoom, Dark Backdrop + EXIF HUD, and instant sidebar search. <a href="https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest">Watch / download full 1080p MP4 on Releases →</a></em></sub></p>
+- [`01-web-retina-png-crush.flowbatch`](examples/01-web-retina-png-crush.flowbatch) — Strip metadata, fit inside 1600px, fan out `1x` + `@2x`, write 256-color crushed Indexed PNGs.
+- [`02-client-proofing-privacy.flowbatch`](examples/02-client-proofing-privacy.flowbatch) — Fix EXIF rotation, remove GPS, apply corner watermark with `[Date]`, resize to 1600px JPEG.
+- [`03-smart-orientation-branching.flowbatch`](examples/03-smart-orientation-branching.flowbatch) — Route images via `Rules` (`Width > 1200`) into separate `16:9` and `1:1` crop + export branches.
+- [`04-docs-screenshot-polisher.flowbatch`](examples/04-docs-screenshot-polisher.flowbatch) — Trim transparent edges, add a 16px border and drop shadow, export 128-color crushed Indexed PNGs.
+- [`05-portfolio-pdf-and-contact-sheet.flowbatch`](examples/05-portfolio-pdf-and-contact-sheet.flowbatch) — Sort by filename, then fan out in parallel to a 4-column `Image Grid` PNG and a multi-page `PDF Maker` export.
 
-</div>
+## Install & Build
 
----
+### macOS 14+ (Apple Silicon)
 
-## 🪟 Windows 11 Edition (Tauri 2 + Rust)
-
-<div align="center">
-
-<img src="docs/assets/windows-ui.jpg" width="960" alt="FlowBatch Studio Windows 11 Fluent 3-Pane Workspace (Tauri 2 + Rust)" />
-
-<p><sub><em>FlowBatch Studio v2.0 (<code>windows/</code>) — Windows 11 Fluent 3-pane workspace powered by Tauri 2, React/TypeScript, and a pure-Rust 67-node processing backend (~5.6 MB release binary, zero Electron bloat).</em></sub></p>
-
-</div>
-
-<table>
-  <tr>
-    <td width="33%" valign="top">
-      <strong>🦀 Pure-Rust 67-Node Engine</strong><br /><br />
-      Built in <code>windows/src-tauri</code> with <code>image</code>, <code>rayon</code>, <code>oxipng</code>, and <code>flate2</code>. Includes clean-room Median-Cut indexed PNG encoding with a 32K RGB555 LUT, pure-Rust multi-page PDF 1.4 Maker/Extractor, and WebP/ICO/PNG/JPEG/TIFF/GIF/BMP export.
-    </td>
-    <td width="33%" valign="top">
-      <strong>🔁 100% <code>.flowbatch</code> Parity</strong><br /><br />
-      Custom Rust serde matches Swift's exact <code>NodeParamValue</code> JSON encoding so every <code>.flowbatch</code> workflow created on macOS loads seamlessly on Windows 11 — mapping Photos Library to Windows Pictures and AppleScript to PowerShell.
-    </td>
-    <td width="33%" valign="top">
-      <strong>📦 Native <code>.exe</code> &amp; <code>.msi</code> Targets</strong><br /><br />
-      Configured for Windows 11 x64 <strong>NSIS <code>.exe</code></strong> and <strong><code>.msi</code></strong> bundling via Tauri 2 (with WebView2 bootstrapper fallback) and verified by <code>7/7</code> Rust release pipeline tests.
-    </td>
-  </tr>
-</table>
-
----
-
-## ✨ Features
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="docs/assets/feat-blur-live.jpg" width="100%" alt="Live Sidebar Search, DAG Branching and Real-Time Metal Gaussian Blur" />
-      <br /><br />
-      <strong>Visual DAG Branching &amp; Live Filters</strong>
-      <p>Search all 67 nodes across 15 categories and double-click or drag straight onto the graph. Directional chevron Bézier wires, DAG cycle detection, <code>Rules</code> dual-port routing (<em>Matched / Unmatched</em>), <code>Multi Scale</code> fan-out, and instant live previews on both macOS Metal and Windows 11 Rust.</p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="docs/assets/hero-app.jpg" width="100%" alt="Write Images Popover and Clean-Room Indexed PNG Encoder" />
-      <br /><br />
-      <strong>Clean-Room Indexed PNG &amp; Modern Formats</strong>
-      <p>Manual PNG chunk writer (<code>IHDR → sRGB → PLTE → tRNS → IDAT → IEND</code>) with Median-Cut quantization (2–256 colors), configurable speed (1–10), Floyd-Steinberg dithering, adaptive 1/2/4/8-bpp packing, and multi-strategy <em>Brute Force Crush</em> (<code>CZlib</code> on macOS / <code>oxipng</code> on Windows) — alongside JPEG, HEIC, AVIF, WebP, TIFF, GIF, JP2, BMP, ICO, PDF, and PSD.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="docs/assets/feat-watermark.jpg" width="100%" alt="Text Watermark Popover with 3x3 Anchor Grid and Live Preview" />
-      <br /><br />
-      <strong>Dynamic Watermarks &amp; Tokenized File Naming</strong>
-      <p>Overlay stylized text or image watermarks with a 3×3 anchor grid, blend modes, rotation, tiling, and live preview. Expand dynamic tokens like <code>[File Name]</code>, <code>[Width]</code>, <code>[Height]</code>, <code>[Counter]</code>, <code>[Date]</code>, <code>[Author]</code>, and <code>[Classification]</code> across output filenames and metadata.</p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="docs/assets/feat-dark-hud.jpg" width="100%" alt="Dark Studio Backdrop and EXIF Asset Information HUD" />
-      <br /><br />
-      <strong>Dark Studio Backdrop, Compare &amp; EXIF HUD</strong>
-      <p>Scrub 256px contact sheets at 60fps, zoom up to 300%, toggle Original vs. Processed comparison, switch between Light/Dark preview backdrops, and inspect dimensions, DPI, bit depth, color profile, camera model, and GPS privacy status in one click.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="docs/assets/feature-memory.svg" width="100%" alt="Dual Metal CIContext Memory Architecture" />
-      <br /><br />
-      <strong>Dual-CIContext 48MP Memory Budget</strong>
-      <p>On macOS, separates a cached GPU <code>previewContext</code> (<code>MTKView</code> via <code>CIRenderDestination</code> + <code>CIRAWFilter.scaleFactor</code>) from a bounded <code>exportContext</code> (<code>.cacheIntermediates: false</code>, <code>.memoryTarget: 512</code> MB) with per-asset <code>autoreleasepool</code> streaming and memory-pressure abort handling.</p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="docs/assets/feature-sandbox.svg" width="100%" alt="Sandboxed JavaScript Worker Architecture" />
-      <br /><br />
-      <strong>Sandboxed Scripting &amp; Automation</strong>
-      <p>Run custom <code>processAsset(asset)</code> JavaScript inside the isolated <code>FlowBatchJSWorker</code> subprocess on macOS (zero Cocoa access, 2.0s watchdog) alongside <code>Shell Script</code> (<code>/bin/zsh</code> or <code>cmd</code>/<code>pwsh</code>) and <code>AppleScript</code> / <code>PowerShell</code> automation nodes.</p>
-    </td>
-  </tr>
-</table>
-
----
-
-## ⚙️ Under the Hood
-
-<table>
-  <tr>
-    <td width="33%" valign="top">
-      <strong>🔀 Topological Execution</strong><br /><br />
-      <code>WorkflowDocumentModel</code> validates DAG edges against cycles, resolves deterministic visual execution order, and runs isolated per-node <code>NodeErrorPolicy</code> strategies (<em>Skip Asset</em>, <em>Halt Workflow</em>, <em>Pass Input Through</em>) on both Swift and Rust engines.
-    </td>
-    <td width="33%" valign="top">
-      <strong>🖼️ Subsampled Thumbnails</strong><br /><br />
-      Strictly decodes grid tiles capped at <code>256px</code> (<code>CGImageSourceCreateThumbnailAtIndex</code> with 64 MB LRU cache on macOS; fast Rust <code>thumbnail(256, 256)</code> with Base64 data URLs on Windows 11).
-    </td>
-    <td width="33%" valign="top">
-      <strong>📄 Built-In PDF &amp; Vision ML</strong><br /><br />
-      macOS uses Apple <code>Vision</code> + <code>PDFKit</code>; Windows 11 ships a zero-C-dependency pure-Rust multi-page PDF 1.4 writer &amp; embedded JPEG extractor alongside built-in brightness/color image classification.
-    </td>
-  </tr>
-  <tr>
-    <td width="33%" valign="top">
-      <strong>↺ Coalesced Undo/Redo</strong><br /><br />
-      Dragging nodes across the canvas or scrubbing continuous inspector sliders commits exactly one undo snapshot upon release while keeping live previews responsive at every frame.
-    </td>
-    <td width="33%" valign="top">
-      <strong>🧰 Starter Workflow Ready</strong><br /><br />
-      First launch on either OS loads <code>Watermark Images.flowbatch</code> with 30 locally generated scenic JPEGs across two <code>Read Folder</code> nodes (16 + 14) wired through <code>Text Watermark</code>, <code>Scale</code> (800px), and indexed <code>Write Images</code>.
-    </td>
-    <td width="33%" valign="top">
-      <strong>📦 Zero Bloat Dual Monorepo</strong><br /><br />
-      macOS lives at repo root (pure Swift 6, zero third-party packages); Windows 11 lives cleanly inside <code>windows/</code> (Tauri 2 + Rust + React/TS) with independent CI and zero cross-platform conflicts.
-    </td>
-  </tr>
-</table>
-
----
-
-## 🚀 Download & Build From Source
-
-### 🪟 Windows 11 (x64 — Build From Source & Installers)
-
-**Build locally on Windows 11 (requires Node.js 20+, Rust stable, and Visual Studio C++ Build Tools):**
-```powershell
-git clone https://github.com/zm57cdj9yb-beep/flowbatch-studio.git
-cd flowbatch-studio\windows
-
-# 1. Install frontend dependencies & typecheck/build React UI
-npm ci
-npm run build
-
-# 2. Run all 7 Rust 67-node backend & pipeline release tests
-cd src-tauri
-cargo test --release
-cd ..
-
-# 3. Build native Windows 11 NSIS (.exe) & MSI (.msi) installers
-npx tauri build --bundles nsis,msi
-```
-
-### 🍎 macOS 14+ (Apple Silicon — Pre-Built Release or Source)
-
-**Pre-built Release:**
-1. Download **`FlowBatch-Studio-v1.0.0-macOS-arm64.zip`** from the [Latest GitHub Release](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest).
-2. Unzip and move **`FlowBatch Studio.app`** to `/Applications`.
-3. Because this open-source release is **ad-hoc signed** (not Apple Developer notarized), clear the macOS quarantine attribute once before opening:
+**Pre-built release:**
+1. Download `FlowBatch-Studio-v1.0.0-macOS-arm64.zip` from [GitHub Releases](https://github.com/zm57cdj9yb-beep/flowbatch-studio/releases/latest).
+2. Unzip and move `FlowBatch Studio.app` to `/Applications`.
+3. This open-source build is **ad-hoc signed** (not Apple Developer notarized), so clear Gatekeeper quarantine once before launching:
    ```bash
    xattr -dr com.apple.quarantine "/Applications/FlowBatch Studio.app"
    open "/Applications/FlowBatch Studio.app"
    ```
 
-**Build & sign locally from source (requires macOS 14.0+ and Xcode / Swift 6):**
+**Build from source (requires macOS 14.0+ and Xcode / Swift 6):**
 ```bash
 git clone https://github.com/zm57cdj9yb-beep/flowbatch-studio.git
 cd flowbatch-studio
 
-# 1. Build all targets (including FlowBatchJSWorker) and run all 20 Swift tests
 swift build
 swift test
-
-# 2. Generate vector AppIcon.icns, demo assets, and build/sign the release .app bundle
 ./scripts/build_app.sh release
-
-# 3. Verify individual & bundle signatures and launch the app
 codesign --verify --strict --verbose=2 "build/FlowBatch Studio.app"
 open "build/FlowBatch Studio.app"
 ```
 
----
+### Windows 11 (Experimental — Build From Source)
 
-## ❓ FAQ
+Pre-built Windows `.exe`/`.msi` installers are not published on Releases yet. To build locally on Windows 11 (requires Node.js 20+, Rust stable, and Visual Studio C++ Build Tools):
 
-<details>
-<summary><b>Are <code>.flowbatch</code> files interchangeable between macOS and Windows 11?</b></summary>
-<br />
-Yes. Both the Swift 6 <code>WorkflowDocumentModel</code> and Rust's custom <code>NodeParamValue</code> serializer read and write the exact same <code>.flowbatch</code> JSON schema across all 67 node <code>typeID</code>s. Platform-specific nodes gracefully adapt: <code>Read Photos Library</code> / <code>Import to Photos</code> map to Windows Pictures, and <code>AppleScript</code> runs PowerShell on Windows 11.
-</details>
+```powershell
+git clone https://github.com/zm57cdj9yb-beep/flowbatch-studio.git
+cd flowbatch-studio\windows
 
-<details>
-<summary><b>How does the memory budget handle large images without crashing?</b></summary>
-<br />
-<code>PipelineRunner</code> enforces a strict split between interactive preview and export:
-<ul>
-  <li><b>Contact Sheet:</b> Decodes at most <code>256px</code> thumbnails (<code>CGImageSourceCreateThumbnailAtIndex</code> on macOS / subsampled thumbnails on Windows).</li>
-  <li><b>Preview Pane (macOS):</b> Renders into <code>MTKView</code> with <code>previewContext</code> (<code>cacheIntermediates: true</code>), applying <code>CIRAWFilter.scaleFactor</code> (0.25×) and <code>CIImageOption.subsampleFactor</code>.</li>
-  <li><b>Batch Export:</b> On macOS, uses a separate <code>exportContext</code> (<code>cacheIntermediates: false</code>, <code>memoryTarget: 512</code> MB) inside per-asset <code>autoreleasepool</code> blocks. On Windows 11, streams assets across Rust <code>rayon</code> worker threads without holding unnecessary full-res intermediates in memory.</li>
-</ul>
-</details>
+npm ci
+npm run build
+cd src-tauri
+cargo test --release
+cd ..
+npx tauri build --bundles nsis,msi
+```
 
-<details>
-<summary><b>What happens when macOS Photos, Screen Recording, or AppleEvents permissions are denied?</b></summary>
-<br />
-FlowBatch Studio checks authorization cleanly instead of crashing:
-<ul>
-  <li><code>Read Photos Library</code> / <code>Import to Photos</code> surface <code>NodeExecutionError.authorizationDenied</code> with an inline <em>Open Privacy Settings…</em> action inside the node popover.</li>
-  <li><code>Screenshot</code> (<code>ScreenCaptureKit</code>) and <code>AppleScript</code> catch denied TCC states and log structured errors to the collapsible Workflow Console according to each node's <code>NodeErrorPolicy</code>.</li>
-</ul>
-</details>
+## Architecture Notes
 
-<details>
-<summary><b>How is the project tested and verified across both platforms?</b></summary>
-<br />
-<ul>
-  <li><b>macOS Swift XCTest suite (<code>20/20</code> passing):</b> Covers all 67 node type IDs, starter graph dry-run counts (<code>30 read, 30 write</code> &amp; <code>Multi Scale</code> <code>30 → 60</code>), coalesced <code>UndoManager</code>, token expansion, manual PNG chunk assembly, <code>PDF Maker</code>, <code>Scale</code>, <code>Remove GPS</code>, <code>Rules</code>, <code>FlowBatchJSWorker</code> isolation &amp; 2s watchdog, 256px thumbnails, 24MP HEIC export, and full 30-asset indexed PNG batch export.</li>
-  <li><b>Windows 11 Rust release test suite (<code>7/7</code> passing):</b> Verifies Swift↔Rust <code>.flowbatch</code> JSON roundtrip, all 67 catalog nodes across 15 categories + smoke execution, pure-Rust PDF 1.4 Maker &amp; Extractor roundtrip, Color Type 3 indexed PNG + <code>oxipng</code> crush, DAG cycle detection + <code>Multi Scale</code> 60-write fan-out, and <code>Rules</code> dual-port routing + full 30-asset Rayon export.</li>
-</ul>
-</details>
+**Preview vs. Export memory split (macOS):** Contact-sheet thumbnails strictly use `CGImageSourceCreateThumbnailAtIndex` capped at 256px (preferring embedded RAW JPEGs) inside a 64 MB `NSCache` ([`ThumbnailLoader.swift`](Sources/FlowBatchCore/Engine/ThumbnailLoader.swift)). Interactive previews render into `MTKView` via a cached `previewContext` with monotonic generation-ID cancellation and 0.25× `CIRAWFilter.scaleFactor`, while disk exports use an uncached `exportContext` (`memoryTarget: 512` MB) inside per-asset `autoreleasepool` blocks monitored by `DispatchSourceMemoryPressure` ([`PipelineRunner.swift`](Sources/FlowBatchCore/Engine/PipelineRunner.swift)).
+
+**Clean-room Indexed PNG encoder:** Instead of calling an external binary, [`IndexedPNGQuantizer.swift`](Sources/FlowBatchCore/Engine/IndexedPNGQuantizer.swift) implements Median-Cut quantization, alpha unpremultiplication, a 16K direct-mapped lookup cache, and **Cauchy-Schwarz luminance branch-and-bound pruning** for exact nearest-palette search, followed by 1/2/4/8-bpp bit-packing and manual PNG chunk writing (`IHDR`, `sRGB`, `PLTE`, `tRNS`, `IDAT`, `IEND`) backed by system `zlib` (`CZlib`). Crush mode compares Filter None (`0`) and per-row adaptive SAD filters across zlib strategies at level 9 and keeps the smallest payload.
+
+**Process-isolated JavaScript node (macOS):** [`FlowBatchJSWorker`](Sources/FlowBatchJSWorker/main.swift) runs user scripts inside an isolated subprocess `JSVirtualMachine` communicating over stdin/stdout JSON. Only the `asset` DTO (`fileName`, `width`, `height`, `dpi`, `tags`, `skip()`, `setOutputName()`) and `console.log` are exposed, with a 2.0-second `SIGTERM` timeout. See [`SECURITY.md`](SECURITY.md) for the full trust model covering shell/script nodes.
+
+## Platform Status & Known Limitations
+
+- **macOS signing:** Releases are ad-hoc signed rather than Apple Developer ID notarized.
+- **macOS batch concurrency:** `PipelineRunner.runWorkflow` currently processes assets sequentially (one full-res asset at a time) to keep peak RAM flat (`46.9 MB` measured on 30 assets); RAM-tiered `TaskGroup` concurrency (`safeExportConcurrencyLimit`) is not wired up yet.
+- **macOS formats:** Exports PNG (standard & indexed), JPEG, HEIC, AVIF, TIFF, GIF (including animated), JPEG 2000, BMP, and PDF. WebP and PSD are read-only because macOS `ImageIO` does not ship encoders for them.
+- **Experimental Windows port (`windows/`):**
+  - Core image transforms, filters, DAG routing, `Multi Scale`, clean-room Indexed PNG + `oxipng`, WebP/ICO/PNG/JPEG/TIFF/GIF/BMP export, and pure-Rust multi-page PDF 1.4 Maker/Extractor work and pass unit tests.
+  - Several macOS-native nodes are currently stubs/no-ops on Windows: `Prompt for Files`, `Clipboard`, `Screenshot`, `Write to Clipboard`, `Open in Another App`, `Fix EXIF Rotation`, and `Layer & Page Splitter`.
+  - EXIF/GPS/ICC metadata writing, camera RAW decoding, full JavaScript execution (currently a minimal zero-side-effect inline rule evaluator), and TrueType watermark text rendering (currently a 5×7 uppercase ASCII bitmap fallback) are not yet implemented on Windows.
+  - Windows batch execution currently buffers decoded images per stage in RAM (`621.5 MB` Peak RSS on 30 assets) rather than streaming per asset.
+
+## Built-In Nodes
 
 <details>
-<summary><b>Which image formats are supported on macOS vs. Windows 11?</b></summary>
-<br />
-<ul>
-  <li><b>macOS:</b> PNG (standard &amp; indexed), JPEG, HEIC, AVIF, TIFF, GIF (including animated), JPEG 2000, BMP, PDF, and PSD (WebP decoding supported via <code>ImageIO</code>).</li>
-  <li><b>Windows 11:</b> PNG (standard, indexed 2–256 colors &amp; <code>oxipng</code> crush), JPEG, WebP, TIFF, GIF (including animated), BMP, ICO, and multi-page PDF 1.4.</li>
-</ul>
-</details>
-
----
-
-## 📊 Reference & Hardware Concurrency Tiers (macOS)
-
-| Mac Unified Memory | ≤24MP Export Concurrency | >24MP / RAW Concurrency | Export `CIContext` Target |
-|---|:---:|:---:|---|
-| **8–16 GB** | `1` asset at a time (`autoreleasepool`) | `1` asset at a time | `memoryTarget: 512` MB, `cacheIntermediates: false` |
-| **32 GB** | `2` concurrent exports | `1` asset at a time | `memoryTarget: 512` MB, `cacheIntermediates: false` |
-| **64 GB+** | `4` concurrent exports | `1` asset at a time | `memoryTarget: 512` MB, `cacheIntermediates: false` |
-
----
-
-## 🧩 All 67 Built-In Nodes
-
-<details>
-<summary><b>Expand complete 15-category / 67-node inventory (macOS &amp; Windows 11)</b></summary>
-<br />
+<summary>Complete 15-category / 67-node inventory (* = macOS-only or stubbed on Windows)</summary>
 
 | Category | Nodes |
 |---|---|
-| **Read Images (5)** | `Read Folder`, `Read Individual Files`, `Prompt for Files`, `Clipboard`, `RAW Process` |
-| **Write Images (4)** | `Write Images`, `Write to Clipboard`, `Open in Another App`, `Multi Scale` |
-| **Blur (5)** | `Gaussian Blur`, `Box Blur`, `Motion Blur`, `Noise Reduction`, `Pixelate` |
-| **Color Adjustment (7)** | `Exposure`, `Brightness & Contrast`, `Vibrance`, `Gamma`, `Temperature & Tint`, `Shadows & Highlights`, `Color Profile` |
-| **Color Effect (10)** | `Photo Effect`, `Sepia`, `Color Invert`, `Color Posterize`, `1-Bit`, `Dither`, `Matte`, `Add Border`, `Drop Shadow`, `Document Enhancer` |
-| **Generator (4)** | `Blank Image`, `Screenshot`, `Image Grid`, `Animated Image` |
-| **Metadata (5)** | `Delete Metadata`, `Remove GPS`, `Set DPI`, `Set General Metadata`, `Fix EXIF Rotation` |
-| **Misc (7)** | `Change Bits Per Channel`, `Duplicate`, `Delay`, `Layer & Page Splitter`, `Extract Portrait Matte`, `Contrast Stretch`, `Custom Convolution` |
-| **PDF (2)** | `PDF Maker`, `PDF Image Extractor` |
-| **Photos Library (2)** | `Read Photos Library` *(Windows Pictures on Win11)*, `Import to Photos` *(Windows Pictures on Win11)* |
-| **Script (3)** | `JavaScript`, `Shell Script`, `AppleScript` *(PowerShell on Win11)* |
-| **Sharpen (2)** | `Sharpen Luminance`, `Unsharp Mask` |
-| **Sort (3)** | `Rules`, `Classify Images`, `Sort Order` |
-| **Transform (6)** | `Scale`, `Crop`, `Rotate`, `Flip`, `Trim to Edges`, `ML Super Resolution` |
-| **Watermark (2)** | `Text Watermark`, `Image Watermark` |
+| Read Images (5) | `Read Folder`, `Read Individual Files`, `Prompt for Files`*, `Clipboard`*, `RAW Process`* |
+| Write Images (4) | `Write Images`, `Write to Clipboard`*, `Open in Another App`*, `Multi Scale` |
+| Blur (5) | `Gaussian Blur`, `Box Blur`, `Motion Blur`, `Noise Reduction`, `Pixelate` |
+| Color Adjustment (7) | `Exposure`, `Brightness & Contrast`, `Vibrance`, `Gamma`, `Temperature & Tint`, `Shadows & Highlights`, `Color Profile` |
+| Color Effect (10) | `Photo Effect`, `Sepia`, `Color Invert`, `Color Posterize`, `1-Bit`, `Dither`, `Matte`, `Add Border`, `Drop Shadow`, `Document Enhancer` |
+| Generator (4) | `Blank Image`, `Screenshot`*, `Image Grid`, `Animated Image` |
+| Metadata (5) | `Delete Metadata`*, `Remove GPS`*, `Set DPI`*, `Set General Metadata`*, `Fix EXIF Rotation`* |
+| Misc (7) | `Change Bits Per Channel`*, `Duplicate`, `Delay`, `Layer & Page Splitter`*, `Extract Portrait Matte`*, `Contrast Stretch`, `Custom Convolution` |
+| PDF (2) | `PDF Maker`, `PDF Image Extractor` |
+| Photos Library (2) | `Read Photos Library` *(Windows Pictures)*, `Import to Photos` *(Windows Pictures)* |
+| Script (3) | `JavaScript` *(isolated JSC on macOS; inline evaluator on Windows)*, `Shell Script`, `AppleScript` *(PowerShell on Windows)* |
+| Sharpen (2) | `Sharpen Luminance`, `Unsharp Mask` |
+| Sort (3) | `Rules`, `Classify Images` *(Vision ML on macOS; color/luma heuristic on Windows)*, `Sort Order` |
+| Transform (6) | `Scale`, `Crop`, `Rotate`, `Flip`, `Trim to Edges`, `Upscale & Sharpen` |
+| Watermark (2) | `Text Watermark` *(CoreText on macOS; 5×7 bitmap on Windows)*, `Image Watermark` |
 
 </details>
 
----
+## Contributing & Security
 
-## 🛠️ Tech Stack & Monorepo Structure
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local test commands, cross-platform node guidelines, and open parity tasks. For vulnerability reporting and the script-node trust model, see [`SECURITY.md`](SECURITY.md). Participation is governed by [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
-| Platform / Layer | Directory | Technology | Role |
-|---|---|---|---|
-| **macOS Window & Canvas** | `Sources/` | AppKit (`NSWindow`, `NSSplitViewController`, `NSView`, `NSPopover`) | Unified toolbar, 60fps grid/wire drawing, drag-drop & VoiceOver A11y |
-| **macOS GPU & Inspectors** | `Sources/` | Swift 6 + SwiftUI + Metal (`MTKView`, `CIContext`) + `CZlib` | Hardware-accelerated filters, live preview, indexed PNG & 512MB streaming |
-| **macOS Scripting** | `Sources/FlowBatchJSWorker/` | `JavaScriptCore` isolated subprocess | Sandboxed `processAsset(asset)` execution with 2.0s watchdog |
-| **Windows 11 Desktop UI** | `windows/src/` | Tauri 2 + React 19 + TypeScript + Vite | Windows 11 Fluent 3-pane workspace, SVG chevron wires & live preview |
-| **Windows 11 Rust Core** | `windows/src-tauri/` | Rust (`image`, `rayon`, `oxipng`, `flate2`, `tauri-plugin-dialog`) | Multi-core 67-node pipeline, Median-Cut indexed PNG, pure-Rust PDF 1.4 |
-| **Windows 11 Packaging** | `windows/src-tauri/tauri.conf.json` | Tauri 2 Bundler (`nsis`, `msi`) | Native Windows 11 x64 `.exe` & `.msi` installer targets |
-| **Launch Video** | `promo-video/` | [HyperFrames](https://github.com/heygen-com/hyperframes) | Deterministic HTML/GSAP 1080p launch edit built from real app footage |
+## License
 
----
-
-## 🗺️ Roadmap
-
-| Milestone | Platform | Status | Scope |
-|---|---|---|---|
-| **v1.0 Core & 67 Nodes** | macOS 14+ (Swift 6) | **Released (`v1.0.0`)** | Full 15-category node suite, Metal preview, indexed PNG, `.flowbatch` JSON, 20/20 tests |
-| **v2.0 Cross-Platform** | Windows 11 (Tauri 2 + Rust) | **In `main` (`windows/`)** | Native Windows 11 Fluent UI, 67-node Rust + `rayon` + `oxipng` engine, 100% `.flowbatch` parity, 7/7 Rust release tests |
-| **v2.1 Distribution Polish** | macOS & Windows 11 | **Planned** | Apple Developer ID notarization + Homebrew Cask, Authenticode signing + Winget manifest |
-
----
-
-## ⭐ Star History
-
-<div align="center">
-
-<a href="https://star-history.com/#zm57cdj9yb-beep/flowbatch-studio&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zm57cdj9yb-beep/flowbatch-studio&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zm57cdj9yb-beep/flowbatch-studio&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zm57cdj9yb-beep/flowbatch-studio&type=Date" width="760" />
-  </picture>
-</a>
-
-<br /><br />
-
-**Released under the [MIT License](LICENSE).**
-
-<p><sub>If FlowBatch Studio helps your workflow or serves as a reference for native Swift 6 / Metal &amp; Tauri 2 / Rust architecture, give it a ⭐!</sub></p>
-
-<p><a href="#flowbatch-studio">↑ Back to top</a></p>
-
-</div>
+Released under the [MIT License](LICENSE).
